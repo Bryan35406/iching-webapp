@@ -16,6 +16,7 @@ from email import encoders
 import sqlite3
 import json
 import uuid
+import tempfile
 
 # 이메일 설정 import
 try:
@@ -27,6 +28,26 @@ except ImportError:
     RECIPIENT_EMAIL = "braunsoopark@gmail.com"
 
 app = Flask(__name__)
+
+# Vercel 환경에서 임시 디렉토리 사용
+def get_temp_dir():
+    """임시 디렉토리 경로 반환"""
+    if os.environ.get('VERCEL'):
+        return Path('/tmp')
+    else:
+        return Path('.')
+
+def get_output_dir():
+    """출력 디렉토리 경로 반환"""
+    base_dir = get_temp_dir()
+    output_dir = base_dir / "출력"
+    output_dir.mkdir(exist_ok=True)
+    return output_dir
+
+def get_db_path():
+    """데이터베이스 파일 경로 반환"""
+    base_dir = get_temp_dir()
+    return base_dir / 'iching_history.db'
 
 class IChingWeb:
     def __init__(self):
@@ -105,47 +126,28 @@ class IChingWeb:
         return None
     
     def get_interpretation_text(self, hexagram_name):
-        """괘 해석 텍스트를 파일에서 읽어오기"""
-        doc_path = Path(f"해석/{hexagram_name}.docx")
-        
-        if not doc_path.exists():
-            return f"'{hexagram_name}' 해석 파일을 찾을 수 없습니다."
-        
+        """해석 파일에서 텍스트 읽기"""
         try:
-            doc = Document(doc_path)
-            content = []
+            # Vercel 환경에서는 해석 파일을 프로젝트 루트에서 찾기
+            if os.environ.get('VERCEL'):
+                interpretation_path = Path(f"해석/{hexagram_name}.docx")
+            else:
+                interpretation_path = Path(f"해석/{hexagram_name}.docx")
+            
+            if not interpretation_path.exists():
+                return f"{hexagram_name}에 대한 해석 파일을 찾을 수 없습니다."
+            
+            doc = Document(interpretation_path)
+            
+            text_content = []
             for paragraph in doc.paragraphs:
                 if paragraph.text.strip():
-                    content.append(paragraph.text)
+                    text_content.append(paragraph.text.strip())
             
-            if content:
-                # 효 사이에 빈 줄 추가
-                formatted_content = []
-                prev_line_was_effect = False
-                found_first_effect = False
-                
-                for i, line in enumerate(content):
-                    # 현재 줄이 효 설명인지 확인
-                    current_is_effect = any(line.strip().startswith(f"{j}효") for j in range(1, 7))
-                    
-                    # 첫 번째 효가 나타나기 전에 빈 줄 추가
-                    if current_is_effect and not found_first_effect:
-                        if formatted_content:
-                            formatted_content.append("")
-                        found_first_effect = True
-                    
-                    # 효와 효 사이에 빈 줄 추가
-                    elif prev_line_was_effect and current_is_effect and i > 0:
-                        formatted_content.append("")
-                    
-                    formatted_content.append(line)
-                    prev_line_was_effect = current_is_effect
-                
-                return '\n'.join(formatted_content)
-            else:
-                return "해석 내용이 없습니다."
+            return '\n'.join(text_content) if text_content else f"{hexagram_name}에 대한 해석 내용이 없습니다."
+            
         except Exception as e:
-            return f"해석 파일을 읽는 중 오류가 발생했습니다: {str(e)}"
+            return f"{hexagram_name} 해석 파일 읽기 오류: {str(e)}"
     
     def calculate_final_interpretation(self, original_hexagram, changed_hexagram, moving_lines, lines):
         """동효 개수에 따른 최종 해석 계산"""
@@ -307,8 +309,7 @@ def save_result():
         data = request.json
         
         # 출력 폴더 생성
-        output_dir = Path("출력")
-        output_dir.mkdir(exist_ok=True)
+        output_dir = get_output_dir()
         
         # 파일명 생성 (영문으로 변경)
         now = datetime.now()
@@ -436,22 +437,25 @@ def download_file(filename):
         if not filename.endswith('.docx') or '..' in filename:
             return jsonify({'error': '잘못된 파일명입니다.'}), 400
         
-        filepath = Path("출력") / filename
+        filepath = get_output_dir() / filename
         
         if not filepath.exists():
             return jsonify({'error': '파일을 찾을 수 없습니다.'}), 404
         
         # 파일을 바이너리로 읽어서 Response 생성
-        with open(filepath, 'rb') as f:
-            file_data = f.read()
-        
-        response = make_response(file_data)
-        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        # 안전한 ASCII 파일명 사용
-        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
-        response.headers['Content-Length'] = len(file_data)
-        
-        return response
+        try:
+            with open(filepath, 'rb') as f:
+                file_data = f.read()
+            
+            response = make_response(file_data)
+            response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            # 안전한 ASCII 파일명 사용
+            response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+            response.headers['Content-Length'] = len(file_data)
+            
+            return response
+        except Exception as file_error:
+            return jsonify({'error': f'파일 읽기 오류: {str(file_error)}'}), 500
         
     except Exception as e:
         return jsonify({'error': f'다운로드 중 오류가 발생했습니다: {str(e)}'}), 500
@@ -463,8 +467,7 @@ def send_email():
         data = request.json
         
         # 출력 폴더 생성
-        output_dir = Path("출력")
-        output_dir.mkdir(exist_ok=True)
+        output_dir = get_output_dir()
         
         # 파일명 생성 (영문으로 변경)
         now = datetime.now()
@@ -660,7 +663,7 @@ def save_history():
         data = request.json
         
         # 데이터베이스 연결
-        conn = sqlite3.connect('iching_history.db')
+        conn = sqlite3.connect(get_db_path())
         cursor = conn.cursor()
         
         # 테이블 생성
@@ -717,7 +720,7 @@ def get_history():
     """저장된 점괘 히스토리 조회"""
     try:
         # 데이터베이스 연결
-        conn = sqlite3.connect('iching_history.db')
+        conn = sqlite3.connect(get_db_path())
         cursor = conn.cursor()
         
         # 최근 50개 결과 조회
@@ -771,7 +774,7 @@ def delete_history_item(history_id):
     """특정 히스토리 항목 삭제"""
     try:
         # 데이터베이스 연결
-        conn = sqlite3.connect('iching_history.db')
+        conn = sqlite3.connect(get_db_path())
         cursor = conn.cursor()
         
         # 해당 ID의 히스토리 삭제
@@ -797,7 +800,7 @@ def clear_all_history():
     """모든 히스토리 삭제"""
     try:
         # 데이터베이스 연결
-        conn = sqlite3.connect('iching_history.db')
+        conn = sqlite3.connect(get_db_path())
         cursor = conn.cursor()
         
         # 모든 히스토리 삭제
@@ -821,9 +824,10 @@ def history_page():
     return render_template('history.html')
 
 if __name__ == '__main__':
-    # 필요한 폴더 생성
-    Path("해석").mkdir(exist_ok=True)
-    Path("출력").mkdir(exist_ok=True)
+    # 필요한 폴더 생성 (로컬 환경에서만)
+    if not os.environ.get('VERCEL'):
+        Path("해석").mkdir(exist_ok=True)
+        Path("출력").mkdir(exist_ok=True)
     
     app.run(host='0.0.0.0', port=5001, debug=True)
 
