@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주역 점괘 히스토리</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', '맑은 고딕', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            font-weight: 300;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .nav {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin: 0 10px;
+            transition: all 0.3s;
+        }
+
+        .nav a:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .clear-all-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+            transition: all 0.3s;
+        }
+
+        .clear-all-btn:hover {
+            background: #c82333;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            float: right;
+            transition: all 0.3s;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: -20px auto 0;
+            padding: 0 20px 40px;
+        }
+
+        .history-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .history-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .history-date {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .history-question {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .history-body {
+            padding: 20px;
+        }
+
+        .history-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .summary-item.original {
+            background: #e8f5e8;
+            color: #2d5a2d;
+        }
+
+        .summary-item.changed {
+            background: #f0e8f5;
+            color: #5a2d5a;
+        }
+
+        .summary-item.final {
+            background: #fff3e0;
+            color: #8b4513;
+        }
+
+        .summary-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .summary-name {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .lines-display {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .line-item {
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .line-symbol {
+            width: 30px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .line-symbol.yang {
+            background: #fff5f5;
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
+
+        .line-symbol.yin {
+            background: #f0f8ff;
+            border-color: #3498db;
+            color: #3498db;
+        }
+
+        .line-symbol.moving {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .empty-state h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 36px;
+            }
+            
+            .history-summary {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .lines-display {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>점괘 히스토리</h1>
+        <p>과거 점괘 결과를 확인하세요</p>
+        
+        <div class="nav">
+            <a href="/">새 점괘</a>
+            <a href="/history">히스토리</a>
+            <button class="clear-all-btn" onclick="clearAllHistory()">전체 삭제</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 로딩 표시 -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>히스토리를 불러오는 중...</p>
+        </div>
+
+        <!-- 빈 상태 -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <h3>📜 아직 저장된 점괘가 없습니다</h3>
+            <p>첫 번째 점괘를 치러 가보세요!</p>
+        </div>
+
+        <!-- 히스토리 목록 -->
+        <div id="historyList"></div>
+    </div>
+
+    <script>
+        // 페이지 로드 시 히스토리 불러오기
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHistory();
+        });
+
+        async function loadHistory() {
+            try {
+                const response = await fetch('/api/history');
+                const result = await response.json();
+
+                document.getElementById('loading').style.display = 'none';
+
+                if (!response.ok) {
+                    throw new Error(result.error || '히스토리를 불러올 수 없습니다.');
+                }
+
+                if (result.history.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+
+                displayHistory(result.history);
+
+            } catch (error) {
+                document.getElementById('loading').innerHTML = 
+                    `<p style="color: #ff6b6b;">오류: ${error.message}</p>`;
+            }
+        }
+
+        function displayHistory(history) {
+            const historyList = document.getElementById('historyList');
+            
+            history.forEach(item => {
+                const card = createHistoryCard(item);
+                historyList.appendChild(card);
+            });
+        }
+
+        function createHistoryCard(item) {
+            const card = document.createElement('div');
+            card.className = 'history-card';
+
+            const date = new Date(item.created_at).toLocaleString('ko-KR');
+            
+            card.innerHTML = `
+                <div class="history-header">
+                    <div class="history-date">${date}</div>
+                    <div class="history-question">
+                        ${item.question || '질문이 입력되지 않았습니다'}
+                        <button class="delete-btn" onclick="deleteHistory(${item.id})">삭제</button>
+                    </div>
+                </div>
+                <div class="history-body">
+                    <div class="history-summary">
+                        <div class="summary-item original">
+                            <div class="summary-title">본괘</div>
+                            <div class="summary-name">${item.original.number}. ${item.original.name}</div>
+                        </div>
+                        <div class="summary-item changed">
+                            <div class="summary-title">지괘</div>
+                            <div class="summary-name">${item.changed ? `${item.changed.number}. ${item.changed.name}` : '동효 없음'}</div>
+                        </div>
+                        <div class="summary-item final">
+                            <div class="summary-title">최종 점괘</div>
+                            <div class="summary-name">${item.final.number}. ${item.final.name}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="lines-display">
+                        ${item.lines.map((line, index) => `
+                            <div class="line-item">
+                                <div class="line-symbol ${line === '1' ? 'yang' : 'yin'} ${item.moving_lines.includes(index) ? 'moving' : ''}">
+                                    ${line === '1' ? '—' : '--'}
+                                </div>
+                                <div>${index + 1}효</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div style="text-align: center; color: #666; font-size: 14px; margin-top: 15px;">
+                        ${item.rule}
+                    </div>
+                    
+                    ${item.final.interpretation ? `
+                        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #8b4513;">
+                            <div style="font-weight: 600; color: #8b4513; margin-bottom: 10px; font-size: 14px;">
+                                📜 최종 해석
+                            </div>
+                            <div style="font-size: 13px; line-height: 1.6; color: #555; white-space: pre-line; max-height: 200px; overflow-y: auto;">
+                                ${item.final.interpretation.substring(0, 500)}${item.final.interpretation.length > 500 ? '...' : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            return card;
+        }
+
+        // 개별 히스토리 삭제
+        async function deleteHistory(historyId) {
+            if (!confirm('이 점괘 결과를 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/history/${historyId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(result.message);
+                    location.reload(); // 페이지 새로고침
+                } else {
+                    alert('삭제 실패: ' + result.error);
+                }
+            } catch (error) {
+                alert('삭제 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        // 전체 히스토리 삭제
+        async function clearAllHistory() {
+            if (!confirm('모든 점괘 히스토리를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/history/clear', {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(result.message);
+                    location.reload(); // 페이지 새로고침
+                } else {
+                    alert('삭제 실패: ' + result.error);
+                }
+            } catch (error) {
+                alert('삭제 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html> 

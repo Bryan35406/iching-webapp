@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주역 점괘</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', '맑은 고딕', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            font-weight: 300;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .nav {
+            text-align: center;
+            margin: 20px 0 40px 0;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin: 0 10px;
+            transition: all 0.3s;
+        }
+
+        .nav a:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto 0;
+            padding: 0 20px 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 25px 30px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .card-subtitle {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .card-body {
+            padding: 30px;
+        }
+
+        .question-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            background: #fafafa;
+        }
+
+        .question-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .question-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .question-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .question-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .question-input-small {
+            padding: 10px 15px;
+            border: 2px solid #f0f0f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            background: #fafafa;
+        }
+
+        .question-input-small:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .question-select {
+            padding: 10px 15px;
+            border: 2px solid #f0f0f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            background: #fafafa;
+            cursor: pointer;
+        }
+
+        .question-select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .question-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .generated-question-container {
+            margin-top: 20px;
+        }
+
+        .email-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .email-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .email-modal h3 {
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .email-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #f0f0f0;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .email-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .lines-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .line-item {
+            text-align: center;
+        }
+
+        .line-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .line-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+
+        .line-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            min-width: 50px;
+        }
+
+        .line-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .line-btn:hover {
+            border-color: #667eea;
+        }
+
+        .moving-checkbox-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .moving-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: #e74c3c;
+        }
+
+        .moving-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 120px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .results {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .result-header {
+            padding: 20px;
+            font-weight: 600;
+            font-size: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .result-header.original {
+            background: #e8f5e8;
+            color: #2d5a2d;
+        }
+
+        .result-header.changed {
+            background: #f0e8f5;
+            color: #5a2d5a;
+        }
+
+        .result-header.final {
+            background: #fff3e0;
+            color: #8b4513;
+        }
+
+        .result-name {
+            padding: 15px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .result-name.original {
+            color: #2d5a2d;
+        }
+
+        .result-name.changed {
+            color: #5a2d5a;
+        }
+
+        .result-name.final {
+            color: #8b4513;
+        }
+
+        .result-rule {
+            padding: 10px 20px;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            font-style: italic;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .result-text {
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-line;
+            background: #fafafa;
+        }
+
+        .highlight {
+            background: #fff3cd !important;
+            color: #856404 !important;
+            font-weight: bold;
+            display: block;
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 4px solid;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border-left-color: #17a2b8;
+            color: #0c5460;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 36px;
+            }
+            
+            .question-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .lines-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+            }
+            
+            .results {
+                grid-template-columns: 1fr;
+            }
+            
+            .buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 200px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .lines-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>주역 점괘</h1>
+        <p>Book of Changes - 64괘로 보는 운세</p>
+    </div>
+
+    <div class="nav">
+        <a href="/">새 점괘</a>
+        <a href="#" onclick="showHistoryAccessModal()">히스토리</a>
+    </div>
+
+    <div class="container">
+        <!-- 질문 입력 카드 -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">질문을 입력하세요</div>
+            </div>
+            <div class="card-body">
+                <div class="question-grid">
+                    <div class="question-item">
+                        <label class="question-label">1) 언제</label>
+                        <select id="when" class="question-select">
+                            <option value="">선택하세요</option>
+                            <option value="지금">지금</option>
+                            <option value="1년후">1년후</option>
+                            <option value="2년후">2년후</option>
+                            <option value="3년후">3년후</option>
+                            <option value="그 이후">그 이후</option>
+                        </select>
+                    </div>
+                    <div class="question-item">
+                        <label class="question-label">2) 누가</label>
+                        <input type="text" id="who" class="question-input-small" placeholder="예: 나, 우리 가족, 회사">
+                    </div>
+                    <div class="question-item">
+                        <label class="question-label">3) 무엇을</label>
+                        <input type="text" id="what" class="question-input-small" placeholder="예: 사업, 연애, 건강, 이사">
+                    </div>
+                    <div class="question-item">
+                        <label class="question-label">4) 어떻게</label>
+                        <input type="text" id="how" class="question-input-small" placeholder="예: 성공할까, 진행될까, 해결될까">
+                    </div>
+                </div>
+                <div class="question-buttons">
+                    <button id="skipQuestionBtn" class="btn btn-secondary">질문 입력 패스</button>
+                    <button id="generateQuestionBtn" class="btn btn-primary">질문 생성</button>
+                </div>
+                <div class="generated-question-container" id="generatedQuestionContainer" style="display: none;">
+                    <label class="question-label">생성된 질문</label>
+                    <textarea id="generatedQuestion" class="question-input" rows="2" readonly></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- 효 설정 카드 -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">효(爻) 설정</div>
+                <div class="card-subtitle">6개의 효를 왼쪽부터 오른쪽으로 설정하세요. (1효 → 6효)</div>
+            </div>
+            <div class="card-body">
+                <div class="lines-grid">
+                    <div class="line-item">
+                        <div class="line-label">1효</div>
+                        <div class="line-buttons">
+                            <button class="line-btn" data-line="0" data-value="1">— 양</button>
+                            <button class="line-btn" data-line="0" data-value="2">-- 음</button>
+                        </div>
+                        <div class="moving-checkbox-container">
+                            <input type="checkbox" id="moving1" class="moving-checkbox">
+                            <label for="moving1" class="moving-label">동효</label>
+                        </div>
+                    </div>
+                    <div class="line-item">
+                        <div class="line-label">2효</div>
+                        <div class="line-buttons">
+                            <button class="line-btn" data-line="1" data-value="1">— 양</button>
+                            <button class="line-btn" data-line="1" data-value="2">-- 음</button>
+                        </div>
+                        <div class="moving-checkbox-container">
+                            <input type="checkbox" id="moving2" class="moving-checkbox">
+                            <label for="moving2" class="moving-label">동효</label>
+                        </div>
+                    </div>
+                    <div class="line-item">
+                        <div class="line-label">3효</div>
+                        <div class="line-buttons">
+                            <button class="line-btn" data-line="2" data-value="1">— 양</button>
+                            <button class="line-btn" data-line="2" data-value="2">-- 음</button>
+                        </div>
+                        <div class="moving-checkbox-container">
+                            <input type="checkbox" id="moving3" class="moving-checkbox">
+                            <label for="moving3" class="moving-label">동효</label>
+                        </div>
+                    </div>
+                    <div class="line-item">
+                        <div class="line-label">4효</div>
+                        <div class="line-buttons">
+                            <button class="line-btn" data-line="3" data-value="1">— 양</button>
+                            <button class="line-btn" data-line="3" data-value="2">-- 음</button>
+                        </div>
+                        <div class="moving-checkbox-container">
+                            <input type="checkbox" id="moving4" class="moving-checkbox">
+                            <label for="moving4" class="moving-label">동효</label>
+                        </div>
+                    </div>
+                    <div class="line-item">
+                        <div class="line-label">5효</div>
+                        <div class="line-buttons">
+                            <button class="line-btn" data-line="4" data-value="1">— 양</button>
+                            <button class="line-btn" data-line="4" data-value="2">-- 음</button>
+                        </div>
+                        <div class="moving-checkbox-container">
+                            <input type="checkbox" id="moving5" class="moving-checkbox">
+                            <label for="moving5" class="moving-label">동효</label>
+                        </div>
+                    </div>
+                    <div class="line-item">
+                        <div class="line-label">6효</div>
+                        <div class="line-buttons">
+                            <button class="line-btn" data-line="5" data-value="1">— 양</button>
+                            <button class="line-btn" data-line="5" data-value="2">-- 음</button>
+                        </div>
+                        <div class="moving-checkbox-container">
+                            <input type="checkbox" id="moving6" class="moving-checkbox">
+                            <label for="moving6" class="moving-label">동효</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button id="identifyBtn" class="btn btn-primary">점괘 해석</button>
+                    <button id="autoBtn" class="btn btn-secondary">자동 괘 뽑기</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 메시지 표시 영역 -->
+        <div id="message"></div>
+
+        <!-- 로딩 표시 -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>괘를 분석하고 있습니다...</p>
+        </div>
+
+        <!-- 결과 표시 영역 -->
+        <div id="results" class="results hidden">
+            <!-- 본괘 -->
+            <div class="result-card">
+                <div class="result-header original">본괘 (本卦)</div>
+                <div id="originalName" class="result-name original"></div>
+                <div id="originalText" class="result-text"></div>
+            </div>
+
+            <!-- 지괘 -->
+            <div class="result-card">
+                <div class="result-header changed">지괘 (之卦)</div>
+                <div id="changedName" class="result-name changed"></div>
+                <div id="changedText" class="result-text"></div>
+            </div>
+
+            <!-- 최종 해석 -->
+            <div class="result-card">
+                <div class="result-header final">최종 해석</div>
+                <div id="finalName" class="result-name final"></div>
+                <div id="finalRule" class="result-rule"></div>
+                <div id="finalText" class="result-text"></div>
+            </div>
+        </div>
+
+        <!-- 저장 버튼 -->
+        <div class="buttons" id="resultButtons" style="display: none;">
+            <button id="saveResultBtn" class="btn btn-secondary">워드 저장</button>
+            <button id="saveHistoryBtn" class="btn btn-secondary">히스토리 저장</button>
+        </div>
+    </div>
+
+    <!-- 히스토리 저장 비밀번호 모달 -->
+    <div id="historyModal" class="email-modal" style="display: none;">
+        <div class="email-modal-content">
+            <h3>🔒 히스토리 저장 인증</h3>
+            <p style="text-align: center; margin-bottom: 20px; color: #666;">
+                히스토리 저장을 위해 비밀번호를 입력하세요
+            </p>
+            <input type="password" id="historyPassword" class="email-input" placeholder="비밀번호 입력" maxlength="6">
+            <div class="email-buttons">
+                <button onclick="hideHistoryModal()" class="btn btn-secondary">취소</button>
+                <button onclick="saveToHistory()" class="btn btn-primary">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 히스토리 접근 비밀번호 모달 -->
+    <div id="historyAccessModal" class="email-modal" style="display: none;">
+        <div class="email-modal-content">
+            <h3>🔒 히스토리 접근 인증</h3>
+            <p style="text-align: center; margin-bottom: 20px; color: #666;">
+                히스토리 조회를 위해 비밀번호를 입력하세요
+            </p>
+            <input type="password" id="historyAccessPassword" class="email-input" placeholder="비밀번호 입력" maxlength="6">
+            <div class="email-buttons">
+                <button onclick="hideHistoryAccessModal()" class="btn btn-secondary">취소</button>
+                <button onclick="accessHistory()" class="btn btn-primary">접근</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let currentResult = null;
+        let selectedLines = ['', '', '', '', '', '']; // 6개 효의 선택값
+
+        // DOM 요소들
+        const questionInput = document.getElementById('generatedQuestion');
+        const whenSelect = document.getElementById('when');
+        const whoInput = document.getElementById('who');
+        const whatInput = document.getElementById('what');
+        const howInput = document.getElementById('how');
+        const movingCheckboxes = [
+            document.getElementById('moving1'),
+            document.getElementById('moving2'),
+            document.getElementById('moving3'),
+            document.getElementById('moving4'),
+            document.getElementById('moving5'),
+            document.getElementById('moving6')
+        ];
+
+        // 이벤트 리스너 등록
+        document.addEventListener('DOMContentLoaded', function() {
+            // 버튼 이벤트
+            document.getElementById('identifyBtn').addEventListener('click', identifyHexagram);
+            document.getElementById('autoBtn').addEventListener('click', autoGenerate);
+            document.getElementById('generateQuestionBtn').addEventListener('click', generateQuestion);
+            document.getElementById('skipQuestionBtn').addEventListener('click', skipQuestion);
+            document.getElementById('historyPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    saveToHistory();
+                }
+            });
+
+            // 히스토리 접근 비밀번호 엔터키 처리
+            document.getElementById('historyAccessPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    accessHistory();
+                }
+            });
+
+            // 결과 버튼들에 대한 이벤트 위임
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.id === 'saveResultBtn') {
+                    saveResult();
+                } else if (e.target && e.target.id === 'saveHistoryBtn') {
+                    showHistoryModal();
+                }
+            });
+
+            // 효 버튼 이벤트
+            document.querySelectorAll('.line-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const lineIndex = parseInt(this.dataset.line);
+                    const value = this.dataset.value;
+                    
+                    // 같은 효의 다른 버튼들 비활성화
+                    document.querySelectorAll(`[data-line="${lineIndex}"]`).forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    
+                    // 현재 버튼 활성화
+                    this.classList.add('active');
+                    selectedLines[lineIndex] = value;
+                });
+            });
+        });
+
+        // 질문 생성
+        function generateQuestion() {
+            const when = whenSelect.value;
+            const who = whoInput.value.trim();
+            const what = whatInput.value.trim();
+            const how = howInput.value.trim();
+
+            if (!when || !who || !what || !how) {
+                showMessage('모든 질문 항목을 입력해주세요.', 'error');
+                return;
+            }
+
+            const question = `${when} ${who}가 ${what}을/를 ${how}?`;
+            questionInput.value = question;
+            document.getElementById('generatedQuestionContainer').style.display = 'block';
+            showMessage('질문이 생성되었습니다.', 'success');
+        }
+
+        // 질문 입력 패스
+        function skipQuestion() {
+            questionInput.value = '질문을 입력하지 않았습니다.';
+            document.getElementById('generatedQuestionContainer').style.display = 'block';
+            showMessage('질문 입력을 패스했습니다.', 'info');
+        }
+
+        // 히스토리 모달 표시
+        function showHistoryModal() {
+            if (!currentResult) {
+                showMessage('먼저 괘를 해석해주세요.', 'error');
+                return;
+            }
+            document.getElementById('historyModal').style.display = 'flex';
+            document.getElementById('historyPassword').focus();
+        }
+
+        // 히스토리 모달 숨기기
+        function hideHistoryModal() {
+            document.getElementById('historyModal').style.display = 'none';
+            document.getElementById('historyPassword').value = '';
+        }
+
+        // 히스토리 저장
+        async function saveToHistory() {
+            const password = document.getElementById('historyPassword').value;
+            
+            if (password !== '081515') {
+                showMessage('비밀번호가 올바르지 않습니다.', 'error');
+                document.getElementById('historyPassword').value = '';
+                document.getElementById('historyPassword').focus();
+                return;
+            }
+
+            if (!currentResult) {
+                showMessage('먼저 괘를 해석해주세요.', 'error');
+                return;
+            }
+
+            try {
+                showLoading(true);
+                hideHistoryModal();
+
+                const response = await fetch('/api/save-history', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(currentResult)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || '히스토리 저장 중 오류가 발생했습니다.');
+                }
+
+                showMessage('점괘 결과가 히스토리에 저장되었습니다!', 'success');
+
+            } catch (error) {
+                showMessage(error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 괘 식별하기
+        async function identifyHexagram() {
+            try {
+                // 입력값 수집
+                const question = questionInput.value.trim();
+                const lines = selectedLines.slice(); // 복사
+                const movingLines = [];
+                
+                movingCheckboxes.forEach((checkbox, index) => {
+                    if (checkbox.checked) {
+                        movingLines.push(index);
+                    }
+                });
+
+                // 입력 검증
+                if (lines.some(line => !line)) {
+                    showMessage('모든 효를 선택해주세요.', 'error');
+                    return;
+                }
+
+                // 로딩 표시
+                showLoading(true);
+                hideResults();
+
+                // API 호출
+                const response = await fetch('/api/identify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        lines: lines,
+                        moving_lines: movingLines
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || '서버 오류가 발생했습니다.');
+                }
+
+                // 결과 저장 및 표시
+                currentResult = {
+                    question: question,
+                    lines: lines,
+                    moving_lines: movingLines,
+                    ...result
+                };
+
+                displayResults(result);
+                showMessage('점괘 해석이 완료되었습니다.', 'success');
+                document.getElementById('resultButtons').style.display = 'flex';
+
+            } catch (error) {
+                showMessage(error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 자동 괘 뽑기
+        async function autoGenerate() {
+            if (!confirm('자동으로 괘를 뽑으시겠습니까?\n현재 설정된 내용이 모두 지워집니다.')) {
+                return;
+            }
+
+            try {
+                showLoading(true);
+                
+                const response = await fetch('/api/auto-generate', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || '자동 생성 중 오류가 발생했습니다.');
+                }
+
+                // 기존 선택 초기화
+                document.querySelectorAll('.line-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                movingCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+
+                // 생성된 값을 버튼에 설정
+                result.lines.forEach((line, index) => {
+                    selectedLines[index] = line;
+                    const btn = document.querySelector(`[data-line="${index}"][data-value="${line}"]`);
+                    if (btn) {
+                        btn.classList.add('active');
+                    }
+                });
+
+                // 동효 체크박스 설정
+                result.moving_lines.forEach(index => {
+                    movingCheckboxes[index].checked = true;
+                });
+
+                // 자동으로 괘 식별
+                await identifyHexagram();
+
+                showMessage(`자동 괘 뽑기 완료! 동효 ${result.moving_lines.length}개`, 'info');
+
+            } catch (error) {
+                showMessage(error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 결과 저장
+        async function saveResult() {
+            if (!currentResult) {
+                showMessage('먼저 괘를 해석해주세요.', 'error');
+                return;
+            }
+
+            try {
+                showLoading(true);
+
+                const response = await fetch('/api/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(currentResult)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || '저장 중 오류가 발생했습니다.');
+                }
+
+                showMessage(`${result.message}`, 'success');
+                
+                // 자동 다운로드
+                if (result.download_url) {
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = result.download_url;
+                    downloadLink.download = result.filename;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    showMessage(`파일이 다운로드됩니다: ${result.filename}`, 'success');
+                }
+
+            } catch (error) {
+                showMessage(error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 결과 표시
+        function displayResults(result) {
+            // 본괘
+            if (result.original) {
+                document.getElementById('originalName').textContent = 
+                    `${result.original.number}번째 괘: ${result.original.name}`;
+                document.getElementById('originalText').textContent = 
+                    result.original.interpretation;
+            }
+
+            // 지괘
+            if (result.changed) {
+                document.getElementById('changedName').textContent = 
+                    `${result.changed.number}번째 괘: ${result.changed.name}`;
+                document.getElementById('changedText').textContent = 
+                    result.changed.interpretation;
+            } else {
+                document.getElementById('changedName').textContent = '동효가 없습니다';
+                document.getElementById('changedText').textContent = 
+                    '동효를 체크하면 지괘가 표시됩니다.';
+            }
+
+            // 최종 해석
+            if (result.final) {
+                document.getElementById('finalName').textContent = 
+                    `최종: ${result.final.name}`;
+                document.getElementById('finalRule').textContent = 
+                    result.final.rule;
+                
+                // 강조 표시와 함께 최종 해석 표시
+                displayInterpretationWithHighlight(
+                    'finalText', 
+                    result.final.interpretation, 
+                    result.final.highlight_lines || []
+                );
+            }
+
+            showResults();
+        }
+
+        // 강조 표시와 함께 해석 표시
+        function displayInterpretationWithHighlight(elementId, interpretation, highlightLines) {
+            const element = document.getElementById(elementId);
+            const lines = interpretation.split('\n');
+            
+            let html = '';
+            lines.forEach(line => {
+                if (line.trim()) {
+                    let shouldHighlight = false;
+                    for (let highlightLine of highlightLines) {
+                        const effectNum = highlightLine + 1;
+                        if (line.trim().startsWith(`${effectNum}효`)) {
+                            shouldHighlight = true;
+                            break;
+                        }
+                    }
+                    
+                    if (shouldHighlight) {
+                        html += `<span class="highlight">${line}</span>\n`;
+                    } else {
+                        html += line + '\n';
+                    }
+                } else {
+                    html += '\n';
+                }
+            });
+            
+            element.innerHTML = html;
+        }
+
+        // UI 헬퍼 함수들
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function showLoading(show) {
+            const loadingDiv = document.getElementById('loading');
+            if (show) {
+                loadingDiv.classList.remove('hidden');
+            } else {
+                loadingDiv.classList.add('hidden');
+            }
+        }
+
+        function showResults() {
+            document.getElementById('results').classList.remove('hidden');
+        }
+
+        function hideResults() {
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('resultButtons').style.display = 'none';
+        }
+
+        // 히스토리 접근 모달 표시
+        function showHistoryAccessModal() {
+            document.getElementById('historyAccessModal').style.display = 'flex';
+            document.getElementById('historyAccessPassword').focus();
+        }
+
+        // 히스토리 접근 모달 숨기기
+        function hideHistoryAccessModal() {
+            document.getElementById('historyAccessModal').style.display = 'none';
+            document.getElementById('historyAccessPassword').value = '';
+        }
+
+        // 히스토리 접근
+        function accessHistory() {
+            const password = document.getElementById('historyAccessPassword').value;
+            
+            if (password !== '081515') {
+                showMessage('비밀번호가 올바르지 않습니다.', 'error');
+                document.getElementById('historyAccessPassword').value = '';
+                document.getElementById('historyAccessPassword').focus();
+                return;
+            }
+
+            // 비밀번호가 맞으면 히스토리 페이지로 이동
+            hideHistoryAccessModal();
+            window.location.href = '/history';
+        }
+    </script>
+</body>
+</html> 
