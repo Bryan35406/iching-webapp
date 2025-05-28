@@ -454,6 +454,121 @@
             display: none;
         }
 
+        /* 동전 던지기 애니메이션 스타일 */
+        .coin-animation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .coin-animation-title {
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .coins-container {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .coin {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #c0c0c0, #e8e8e8, #c0c0c0);
+            border: 3px solid #a0a0a0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .coin.flipping {
+            animation: coinFlip 0.6s ease-in-out;
+        }
+
+        @keyframes coinFlip {
+            0% { transform: rotateY(0deg) translateY(0px); }
+            25% { transform: rotateY(90deg) translateY(-20px); }
+            50% { transform: rotateY(180deg) translateY(-30px); }
+            75% { transform: rotateY(270deg) translateY(-20px); }
+            100% { transform: rotateY(360deg) translateY(0px); }
+        }
+
+        .coin-result {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .coin-heads {
+            background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
+            color: #8b4513;
+        }
+
+        .coin-tails {
+            background: linear-gradient(45deg, #c0c0c0, #e8e8e8, #c0c0c0);
+            color: #333;
+        }
+
+        .throw-info {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .throw-number {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .throw-description {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .continue-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .continue-button:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 36px;
@@ -480,6 +595,31 @@
             
             .btn {
                 width: 200px;
+            }
+            
+            /* 동전 애니메이션 모바일 최적화 */
+            .coin-animation-title {
+                font-size: 20px;
+                margin-bottom: 20px;
+                padding: 0 20px;
+            }
+            
+            .coins-container {
+                gap: 20px;
+            }
+            
+            .coin {
+                width: 60px;
+                height: 60px;
+                font-size: 12px;
+            }
+            
+            .throw-number {
+                font-size: 18px;
+            }
+            
+            .throw-description {
+                font-size: 14px;
             }
         }
 
@@ -544,7 +684,7 @@
         </div>
 
         <!-- 효 설정 카드 -->
-        <div class="card">
+        <div class="card" id="hexagramCard" style="display: none;">
             <div class="card-header">
                 <div class="card-title">효(爻) 설정</div>
                 <div class="card-subtitle">6개의 효를 왼쪽부터 오른쪽으로 설정하세요. (1효 → 6효)</div>
@@ -681,6 +821,32 @@
         </div>
     </div>
 
+    <!-- 동전 던지기 애니메이션 -->
+    <div id="coinAnimationOverlay" class="coin-animation-overlay" style="display: none;">
+        <div class="coin-animation-title">🪙 동전 던지기로 괘를 뽑고 있습니다</div>
+        
+        <div class="throw-info" id="throwInfo">
+            <div class="throw-number" id="throwNumber">1효를 뽑는 중...</div>
+            <div class="throw-description" id="throwDescription">동전 3개를 던져서 효를 결정합니다</div>
+        </div>
+        
+        <div class="coins-container">
+            <div class="coin" id="coin1">
+                <div class="coin-result" id="coinResult1">?</div>
+            </div>
+            <div class="coin" id="coin2">
+                <div class="coin-result" id="coinResult2">?</div>
+            </div>
+            <div class="coin" id="coin3">
+                <div class="coin-result" id="coinResult3">?</div>
+            </div>
+        </div>
+        
+        <button id="continueButton" class="continue-button" style="display: none;" onclick="hideCoinAnimation()">
+            괘 확인하기
+        </button>
+    </div>
+
     <script>
         // 전역 변수
         let currentResult = null;
@@ -757,6 +923,9 @@
             questionInput.value = question;
             document.getElementById('generatedQuestionContainer').style.display = 'block';
             showMessage('질문이 생성되었습니다.', 'success');
+            
+            // 효 설정 카드 표시
+            document.getElementById('hexagramCard').style.display = 'block';
         }
 
         // 질문 입력 패스
@@ -764,6 +933,9 @@
             questionInput.value = '질문을 입력하지 않았습니다.';
             document.getElementById('generatedQuestionContainer').style.display = 'block';
             showMessage('질문 입력을 패스했습니다.', 'info');
+            
+            // 효 설정 카드 표시
+            document.getElementById('hexagramCard').style.display = 'block';
         }
 
         // 클립보드 모달 표시
@@ -866,8 +1038,10 @@
             }
 
             try {
-                showLoading(true);
+                // 효 설정 카드 표시
+                document.getElementById('hexagramCard').style.display = 'block';
                 
+                // 먼저 서버에서 괘 데이터 생성
                 const response = await fetch('/api/auto-generate', {
                     method: 'POST'
                 });
@@ -877,7 +1051,13 @@
                 if (!response.ok) {
                     throw new Error(result.error || '자동 생성 중 오류가 발생했습니다.');
                 }
-
+                
+                // 서버에서 받은 결과로 동전 애니메이션 시작
+                await showCoinAnimationWithResult(result.lines, result.moving_lines);
+                
+                // 애니메이션 완료 후 자동으로 숨기기
+                hideCoinAnimation();
+                
                 // 기존 선택 초기화
                 document.querySelectorAll('.line-btn').forEach(btn => {
                     btn.classList.remove('active');
@@ -907,8 +1087,7 @@
 
             } catch (error) {
                 showMessage(error.message, 'error');
-            } finally {
-                showLoading(false);
+                hideCoinAnimation();
             }
         }
 
@@ -1016,7 +1195,7 @@
 
                 // 최종 해석
                 if (currentResult.final) {
-                    copyText += `최종 해석: ${currentResult.final.number}번째 괘 - ${currentResult.final.name}\n`;
+                    copyText += `최종 해석: ${currentResult.final.name}\n`;
                     copyText += `해석 규칙: ${currentResult.final.rule}\n\n`;
                     
                     // 최종 해석 내용 (강조 표시는 텍스트로 변환)
@@ -1214,6 +1393,188 @@
             // 비밀번호가 맞으면 히스토리 페이지로 이동
             hideHistoryAccessModal();
             window.location.href = '/history';
+        }
+
+        // 동전 던지기 애니메이션 표시 (서버 결과 반영)
+        async function showCoinAnimationWithResult(lines, movingLines) {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('coinAnimationOverlay');
+                if (!overlay) {
+                    console.error('coinAnimationOverlay not found');
+                    resolve();
+                    return;
+                }
+                
+                // 이전 상태 완전히 정리
+                if (window.coinAnimationResolve) {
+                    window.coinAnimationResolve();
+                    window.coinAnimationResolve = null;
+                }
+                
+                overlay.style.display = 'flex';
+                
+                // 초기 상태로 완전히 리셋
+                const continueBtn = document.getElementById('continueButton');
+                const throwNumber = document.getElementById('throwNumber');
+                const throwDescription = document.getElementById('throwDescription');
+                
+                if (continueBtn) {
+                    continueBtn.style.display = 'none';
+                }
+                if (throwNumber) {
+                    throwNumber.textContent = '1효를 뽑는 중...';
+                }
+                if (throwDescription) {
+                    throwDescription.textContent = '동전 3개를 던져서 효를 결정합니다';
+                }
+                
+                // 동전들 초기화
+                for (let i = 1; i <= 3; i++) {
+                    const coin = document.getElementById(`coin${i}`);
+                    const result = document.getElementById(`coinResult${i}`);
+                    if (coin) {
+                        coin.className = 'coin';
+                    }
+                    if (result) {
+                        result.textContent = '?';
+                        result.className = 'coin-result';
+                    }
+                }
+                
+                let currentThrow = 0;
+                const totalThrows = 6;
+                
+                function throwCoinsForLine() {
+                    if (currentThrow >= totalThrows) {
+                        // 모든 효 완료
+                        const continueBtn = document.getElementById('continueButton');
+                        const throwNumber = document.getElementById('throwNumber');
+                        const throwDescription = document.getElementById('throwDescription');
+                        
+                        if (throwNumber) {
+                            throwNumber.textContent = '모든 효가 결정되었습니다!';
+                        }
+                        if (throwDescription) {
+                            throwDescription.textContent = '잠시 후 괘 해석이 시작됩니다...';
+                        }
+                        
+                        // 2초 후 자동으로 애니메이션 종료하고 다음 단계로 진행
+                        setTimeout(() => {
+                            resolve();
+                        }, 2000);
+                        
+                        return;
+                    }
+                    
+                    const lineNumber = currentThrow + 1;
+                    const throwNumber = document.getElementById('throwNumber');
+                    const throwDescription = document.getElementById('throwDescription');
+                    
+                    if (throwNumber) {
+                        throwNumber.textContent = `${lineNumber}효를 뽑는 중...`;
+                    }
+                    if (throwDescription) {
+                        throwDescription.textContent = '동전 3개를 던져서 효를 결정합니다';
+                    }
+                    
+                    // 각 효마다 동전을 초기 상태로 리셋
+                    for (let i = 1; i <= 3; i++) {
+                        const coin = document.getElementById(`coin${i}`);
+                        const result = document.getElementById(`coinResult${i}`);
+                        if (coin) {
+                            coin.className = 'coin';
+                        }
+                        if (result) {
+                            result.textContent = '?';
+                            result.className = 'coin-result';
+                        }
+                    }
+                    
+                    // 서버 결과에 따른 효 타입과 동효 여부 결정
+                    const lineValue = lines[currentThrow]; // '1' = 양, '2' = 음
+                    const isMoving = movingLines.includes(currentThrow);
+                    const lineType = lineValue === '1' ? '양' : '음';
+                    
+                    // 동전 결과를 서버 결과에 맞게 생성
+                    let yangCount;
+                    if (lineType === '양' && isMoving) {
+                        yangCount = 3; // 노양 (동효)
+                    } else if (lineType === '음' && !isMoving) {
+                        yangCount = 2; // 소음
+                    } else if (lineType === '양' && !isMoving) {
+                        yangCount = 1; // 소양
+                    } else { // lineType === '음' && isMoving
+                        yangCount = 0; // 노음 (동효)
+                    }
+                    
+                    // 동전 던지기 애니메이션
+                    setTimeout(() => {
+                        for (let i = 1; i <= 3; i++) {
+                            const coin = document.getElementById(`coin${i}`);
+                            const result = document.getElementById(`coinResult${i}`);
+                            
+                            if (coin) coin.classList.add('flipping');
+                            
+                            // 결과에 맞게 동전 설정
+                            const isHeads = i <= yangCount;
+                            
+                            setTimeout(() => {
+                                if (coin) coin.classList.remove('flipping');
+                                if (result) {
+                                    if (isHeads) {
+                                        result.textContent = '양';
+                                        result.classList.add('coin-heads');
+                                    } else {
+                                        result.textContent = '음';
+                                        result.classList.add('coin-tails');
+                                    }
+                                }
+                            }, 600);
+                        }
+                        
+                        // 결과 표시
+                        setTimeout(() => {
+                            const movingText = isMoving ? ' (동효)' : '';
+                            const throwNumber = document.getElementById('throwNumber');
+                            const throwDescription = document.getElementById('throwDescription');
+                            
+                            if (throwNumber) {
+                                throwNumber.textContent = `${lineNumber}효: ${lineType}${movingText}`;
+                            }
+                            if (throwDescription) {
+                                throwDescription.textContent = `양 ${yangCount}개, 음 ${3-yangCount}개`;
+                            }
+                            
+                            currentThrow++;
+                            
+                            // 다음 효로 진행
+                            setTimeout(() => {
+                                throwCoinsForLine();
+                            }, 1500);
+                            
+                        }, 800);
+                    }, 500);
+                }
+                
+                // 첫 번째 효부터 시작
+                setTimeout(() => {
+                    throwCoinsForLine();
+                }, 100);
+            });
+        }
+
+        // 동전 던지기 애니메이션 숨기기
+        function hideCoinAnimation() {
+            const overlay = document.getElementById('coinAnimationOverlay');
+            
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+            
+            // 전역 resolve 함수 정리 (더 이상 사용하지 않음)
+            if (window.coinAnimationResolve) {
+                window.coinAnimationResolve = null;
+            }
         }
     </script>
 </body>

@@ -238,10 +238,12 @@ def auto_generate():
         # 6개 효 랜덤 생성
         lines = [random.choice(['1', '2']) for _ in range(6)]
         
-        # 동효 랜덤 생성 (확률 가중치 적용)
+        # 동효 랜덤 생성 (실제 동전 던지기 확률 적용)
+        # 각 효가 동효가 될 확률: 25% (노양 12.5% + 노음 12.5%)
+        # 이항분포 B(6, 0.25) 기반 확률
         moving_count = random.choices(
-            population=[0, 1, 2, 3], 
-            weights=[50, 30, 15, 5], 
+            population=[0, 1, 2, 3, 4, 5, 6], 
+            weights=[18, 36, 30, 13, 3, 1, 0], 
             k=1
         )[0]
         
