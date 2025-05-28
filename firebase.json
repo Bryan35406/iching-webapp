@@ -3,7 +3,7 @@
     {
       "source": ".",
       "codebase": "default",
-      "runtime": "python311"
+      "runtime": "python312"
     }
   ],
   "hosting": {
@@ -12,7 +12,7 @@
       {
         "source": "**",
         "function": {
-          "functionId": "flask_app"
+          "functionId": "main"
         }
       }
     ],
