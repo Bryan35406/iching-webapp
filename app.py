@@ -39,10 +39,15 @@ def get_temp_dir():
 
 def get_output_dir():
     """출력 디렉토리 경로 반환"""
-    base_dir = get_temp_dir()
-    output_dir = base_dir / "출력"
-    output_dir.mkdir(exist_ok=True)
-    return output_dir
+    if os.environ.get('VERCEL'):
+        # Vercel 환경에서는 /tmp 디렉토리만 쓰기 가능
+        return Path('/tmp')
+    else:
+        # 로컬 환경에서는 출력 폴더 생성
+        base_dir = Path('.')
+        output_dir = base_dir / "출력"
+        output_dir.mkdir(exist_ok=True)
+        return output_dir
 
 def get_db_path():
     """데이터베이스 파일 경로 반환"""
@@ -658,8 +663,15 @@ def send_email():
 
 @app.route('/api/save-history', methods=['POST'])
 def save_history():
-    """점괘 결과를 데이터베이스에 저장"""
+    """점괘 결과를 데이터베이스에 저장 - Vercel 환경에서는 비활성화"""
     try:
+        # Vercel 환경에서는 파일 시스템이 읽기 전용이므로 SQLite 사용 불가
+        if os.environ.get('VERCEL'):
+            return jsonify({
+                'success': True,
+                'message': '서버리스 환경에서는 히스토리 저장이 지원되지 않습니다.'
+            })
+        
         data = request.json
         
         # 데이터베이스 연결
@@ -717,8 +729,16 @@ def save_history():
 
 @app.route('/api/history', methods=['GET'])
 def get_history():
-    """저장된 점괘 히스토리 조회"""
+    """저장된 점괘 히스토리 조회 - Vercel 환경에서는 비활성화"""
     try:
+        # Vercel 환경에서는 파일 시스템이 읽기 전용이므로 SQLite 사용 불가
+        if os.environ.get('VERCEL'):
+            return jsonify({
+                'success': True,
+                'history': [],
+                'message': '서버리스 환경에서는 히스토리 기능이 지원되지 않습니다.'
+            })
+        
         # 데이터베이스 연결
         conn = sqlite3.connect(get_db_path())
         cursor = conn.cursor()
@@ -771,8 +791,15 @@ def get_history():
 
 @app.route('/api/history/<int:history_id>', methods=['DELETE'])
 def delete_history_item(history_id):
-    """특정 히스토리 항목 삭제"""
+    """특정 히스토리 항목 삭제 - Vercel 환경에서는 비활성화"""
     try:
+        # Vercel 환경에서는 파일 시스템이 읽기 전용이므로 SQLite 사용 불가
+        if os.environ.get('VERCEL'):
+            return jsonify({
+                'success': True,
+                'message': '서버리스 환경에서는 히스토리 기능이 지원되지 않습니다.'
+            })
+        
         # 데이터베이스 연결
         conn = sqlite3.connect(get_db_path())
         cursor = conn.cursor()
@@ -797,8 +824,15 @@ def delete_history_item(history_id):
 
 @app.route('/api/history/clear', methods=['DELETE'])
 def clear_all_history():
-    """모든 히스토리 삭제"""
+    """모든 히스토리 삭제 - Vercel 환경에서는 비활성화"""
     try:
+        # Vercel 환경에서는 파일 시스템이 읽기 전용이므로 SQLite 사용 불가
+        if os.environ.get('VERCEL'):
+            return jsonify({
+                'success': True,
+                'message': '서버리스 환경에서는 히스토리 기능이 지원되지 않습니다.'
+            })
+        
         # 데이터베이스 연결
         conn = sqlite3.connect(get_db_path())
         cursor = conn.cursor()

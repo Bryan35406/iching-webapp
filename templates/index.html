@@ -498,7 +498,6 @@
 
     <div class="nav">
         <a href="/">새 점괘</a>
-        <a href="#" onclick="showHistoryAccessModal()">히스토리</a>
     </div>
 
     <div class="container">
@@ -663,37 +662,21 @@
 
         <!-- 저장 버튼 -->
         <div class="buttons" id="resultButtons" style="display: none;">
-            <button id="saveResultBtn" class="btn btn-secondary">워드 저장</button>
-            <button id="saveHistoryBtn" class="btn btn-secondary">히스토리 저장</button>
+            <button id="copyToClipboardBtn" class="btn btn-primary">📋 클립보드 복사</button>
         </div>
     </div>
 
-    <!-- 히스토리 저장 비밀번호 모달 -->
-    <div id="historyModal" class="email-modal" style="display: none;">
+    <!-- 클립보드 복사 비밀번호 모달 -->
+    <div id="clipboardModal" class="email-modal" style="display: none;">
         <div class="email-modal-content">
-            <h3>🔒 히스토리 저장 인증</h3>
+            <h3>📋 클립보드 복사 인증</h3>
             <p style="text-align: center; margin-bottom: 20px; color: #666;">
-                히스토리 저장을 위해 비밀번호를 입력하세요
+                클립보드 복사를 위해 비밀번호를 입력하세요
             </p>
-            <input type="password" id="historyPassword" class="email-input" placeholder="비밀번호 입력" maxlength="6">
+            <input type="password" id="clipboardPassword" class="email-input" placeholder="비밀번호 입력" maxlength="6">
             <div class="email-buttons">
-                <button onclick="hideHistoryModal()" class="btn btn-secondary">취소</button>
-                <button onclick="saveToHistory()" class="btn btn-primary">저장</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 히스토리 접근 비밀번호 모달 -->
-    <div id="historyAccessModal" class="email-modal" style="display: none;">
-        <div class="email-modal-content">
-            <h3>🔒 히스토리 접근 인증</h3>
-            <p style="text-align: center; margin-bottom: 20px; color: #666;">
-                히스토리 조회를 위해 비밀번호를 입력하세요
-            </p>
-            <input type="password" id="historyAccessPassword" class="email-input" placeholder="비밀번호 입력" maxlength="6">
-            <div class="email-buttons">
-                <button onclick="hideHistoryAccessModal()" class="btn btn-secondary">취소</button>
-                <button onclick="accessHistory()" class="btn btn-primary">접근</button>
+                <button onclick="hideClipboardModal()" class="btn btn-secondary">취소</button>
+                <button onclick="performClipboardCopy()" class="btn btn-primary">복사</button>
             </div>
         </div>
     </div>
@@ -725,25 +708,18 @@
             document.getElementById('autoBtn').addEventListener('click', autoGenerate);
             document.getElementById('generateQuestionBtn').addEventListener('click', generateQuestion);
             document.getElementById('skipQuestionBtn').addEventListener('click', skipQuestion);
-            document.getElementById('historyPassword').addEventListener('keypress', function(e) {
+            
+            // 클립보드 비밀번호 엔터키 처리
+            document.getElementById('clipboardPassword').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    saveToHistory();
-                }
-            });
-
-            // 히스토리 접근 비밀번호 엔터키 처리
-            document.getElementById('historyAccessPassword').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    accessHistory();
+                    performClipboardCopy();
                 }
             });
 
             // 결과 버튼들에 대한 이벤트 위임
             document.addEventListener('click', function(e) {
-                if (e.target && e.target.id === 'saveResultBtn') {
-                    saveResult();
-                } else if (e.target && e.target.id === 'saveHistoryBtn') {
-                    showHistoryModal();
+                if (e.target && e.target.id === 'copyToClipboardBtn') {
+                    showClipboardModal();
                 }
             });
 
@@ -790,63 +766,35 @@
             showMessage('질문 입력을 패스했습니다.', 'info');
         }
 
-        // 히스토리 모달 표시
-        function showHistoryModal() {
+        // 클립보드 모달 표시
+        function showClipboardModal() {
             if (!currentResult) {
                 showMessage('먼저 괘를 해석해주세요.', 'error');
                 return;
             }
-            document.getElementById('historyModal').style.display = 'flex';
-            document.getElementById('historyPassword').focus();
+            document.getElementById('clipboardModal').style.display = 'flex';
+            document.getElementById('clipboardPassword').focus();
         }
 
-        // 히스토리 모달 숨기기
-        function hideHistoryModal() {
-            document.getElementById('historyModal').style.display = 'none';
-            document.getElementById('historyPassword').value = '';
+        // 클립보드 모달 숨기기
+        function hideClipboardModal() {
+            document.getElementById('clipboardModal').style.display = 'none';
+            document.getElementById('clipboardPassword').value = '';
         }
 
-        // 히스토리 저장
-        async function saveToHistory() {
-            const password = document.getElementById('historyPassword').value;
+        // 클립보드 복사 실행
+        async function performClipboardCopy() {
+            const password = document.getElementById('clipboardPassword').value;
             
             if (password !== '081515') {
                 showMessage('비밀번호가 올바르지 않습니다.', 'error');
-                document.getElementById('historyPassword').value = '';
-                document.getElementById('historyPassword').focus();
+                document.getElementById('clipboardPassword').value = '';
+                document.getElementById('clipboardPassword').focus();
                 return;
             }
 
-            if (!currentResult) {
-                showMessage('먼저 괘를 해석해주세요.', 'error');
-                return;
-            }
-
-            try {
-                showLoading(true);
-                hideHistoryModal();
-
-                const response = await fetch('/api/save-history', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(currentResult)
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.error || '히스토리 저장 중 오류가 발생했습니다.');
-                }
-
-                showMessage('점괘 결과가 히스토리에 저장되었습니다!', 'success');
-
-            } catch (error) {
-                showMessage(error.message, 'error');
-            } finally {
-                showLoading(false);
-            }
+            hideClipboardModal();
+            await copyToClipboard();
         }
 
         // 괘 식별하기
@@ -1006,6 +954,140 @@
                 showMessage(error.message, 'error');
             } finally {
                 showLoading(false);
+            }
+        }
+
+        // 클립보드 복사
+        async function copyToClipboard() {
+            if (!currentResult) {
+                showMessage('먼저 괘를 해석해주세요.', 'error');
+                return;
+            }
+
+            try {
+                // 현재 날짜와 시간
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                // 복사할 텍스트 생성
+                let copyText = `주역 점괘 결과\n`;
+                copyText += `점괘 일시: ${dateStr}\n\n`;
+
+                // 질문
+                const question = currentResult.question || '질문이 입력되지 않았습니다.';
+                copyText += `질문: ${question}\n\n`;
+
+                // 효 정보
+                copyText += `효 정보:\n`;
+                const lines = currentResult.lines || [];
+                const movingLines = currentResult.moving_lines || [];
+                
+                for (let i = 0; i < 6; i++) {
+                    const yinYang = lines[i] === '1' ? '양' : '음';
+                    const moving = movingLines.includes(i) ? ' (동효)' : '';
+                    copyText += `${i + 1}효: ${yinYang}${moving}\n`;
+                }
+                copyText += `\n`;
+
+                // 본괘
+                if (currentResult.original) {
+                    copyText += `본괘: ${currentResult.original.number}번째 괘 - ${currentResult.original.name}\n`;
+                    copyText += `효 패턴: ${lines.join('')}\n`;
+                    copyText += `${currentResult.original.interpretation}\n\n`;
+                }
+
+                // 지괘
+                if (currentResult.changed) {
+                    const changedLines = lines.slice();
+                    movingLines.forEach(i => {
+                        changedLines[i] = changedLines[i] === '1' ? '2' : '1';
+                    });
+                    
+                    copyText += `지괘 (동효 반전): ${currentResult.changed.number}번째 괘 - ${currentResult.changed.name}\n`;
+                    copyText += `효 패턴: ${changedLines.join('')}\n`;
+                    copyText += `${currentResult.changed.interpretation}\n\n`;
+                }
+
+                // 최종 해석
+                if (currentResult.final) {
+                    copyText += `최종 해석: ${currentResult.final.number}번째 괘 - ${currentResult.final.name}\n`;
+                    copyText += `해석 규칙: ${currentResult.final.rule}\n\n`;
+                    
+                    // 최종 해석 내용 (강조 표시는 텍스트로 변환)
+                    const interpretation = currentResult.final.interpretation || '';
+                    const highlightLines = currentResult.final.highlight_lines || [];
+                    const interpretationLines = interpretation.split('\n');
+                    
+                    interpretationLines.forEach(line => {
+                        if (line.trim()) {
+                            let shouldHighlight = false;
+                            for (let highlightLine of highlightLines) {
+                                const effectNum = highlightLine + 1;
+                                if (line.trim().startsWith(`${effectNum}효`)) {
+                                    shouldHighlight = true;
+                                    break;
+                                }
+                            }
+                            
+                            if (shouldHighlight) {
+                                copyText += `★ ${line}\n`;  // 강조 표시를 별표로 표현
+                            } else {
+                                copyText += `${line}\n`;
+                            }
+                        } else {
+                            copyText += `\n`;
+                        }
+                    });
+                }
+
+                // 클립보드에 복사 - 더 안정적인 방법 사용
+                const textArea = document.createElement('textarea');
+                textArea.value = copyText;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                let success = false;
+                try {
+                    // 최신 브라우저에서 Clipboard API 시도
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(copyText);
+                        success = true;
+                    } else {
+                        // fallback: execCommand 사용
+                        success = document.execCommand('copy');
+                    }
+                } catch (err) {
+                    // execCommand fallback
+                    try {
+                        success = document.execCommand('copy');
+                    } catch (fallbackErr) {
+                        success = false;
+                    }
+                }
+                
+                document.body.removeChild(textArea);
+                
+                if (success) {
+                    showMessage('📋 점괘 결과가 클립보드에 복사되었습니다!', 'success');
+                } else {
+                    showMessage('클립보드 복사에 실패했습니다. 수동으로 복사해주세요.', 'error');
+                    // 실패 시 텍스트를 alert로 표시
+                    alert('클립보드 복사 실패. 아래 텍스트를 수동으로 복사하세요:\n\n' + copyText);
+                }
+
+            } catch (error) {
+                showMessage('클립보드 복사 중 오류가 발생했습니다: ' + error.message, 'error');
             }
         }
 
