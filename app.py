@@ -110,16 +110,26 @@ class IChingWeb:
             rule = f"동효 2개 → 본괘 해석, {max(moving_lines)+1}효 강조"
             
         elif moving_count == 3:
-            lower_moving = [x for x in moving_lines if x < 3]
-            upper_moving = [x for x in moving_lines if x >= 3]
+            # 본괘의 1,2,3효 + 지괘의 4,5,6효 조합
+            original_lines = list(lines)  # 본괘 효
+            changed_lines = list(lines)   # 지괘 효 계산
+            for i in moving_lines:
+                changed_lines[i] = '2' if changed_lines[i] == '1' else '1'
             
-            if len(lower_moving) >= len(upper_moving):
-                final_hexagram = original_hexagram
-                rule = f"동효 3개 → 하괘 위주, 본괘 해석"
+            # 새로운 괘 패턴: 본괘의 하괘(1,2,3효) + 지괘의 상괘(4,5,6효)
+            final_pattern = original_lines[:3] + changed_lines[3:]
+            final_pattern_str = ''.join(final_pattern)
+            
+            # 새로운 괘 찾기
+            final_hexagram_info = self.find_hexagram(final_pattern_str)
+            if final_hexagram_info:
+                final_hexagram = final_hexagram_info
             else:
-                final_hexagram = changed_hexagram
-                rule = f"동효 3개 → 상괘 위주, 지괘 해석"
+                # 찾지 못하면 본괘 사용
+                final_hexagram = original_hexagram
+            
             highlight_lines = []
+            rule = f"동효 3개 → 본괘 하괘(1,2,3효) + 지괘 상괘(4,5,6효) 조합"
             
         elif moving_count == 4:
             final_hexagram = changed_hexagram
