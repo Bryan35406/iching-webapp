@@ -17,15 +17,18 @@ import sqlite3
 import json
 import uuid
 import tempfile
+import re
+import platform
+import sys
 
 # 이메일 설정 import
 try:
     from email_config import GMAIL_APP_PASSWORD, SENDER_EMAIL, RECIPIENT_EMAIL
 except ImportError:
     # 설정 파일이 없으면 기본값 사용
-    GMAIL_APP_PASSWORD = "your_16_digit_app_password_here"
-    SENDER_EMAIL = "braunsoopark@gmail.com"
-    RECIPIENT_EMAIL = "braunsoopark@gmail.com"
+    GMAIL_APP_PASSWORD = "your-app-password"
+    SENDER_EMAIL = "your-email@gmail.com"
+    RECIPIENT_EMAIL = "recipient@gmail.com"
 
 app = Flask(__name__)
 
@@ -56,72 +59,72 @@ def get_db_path():
 
 class IChingWeb:
     def __init__(self):
-        # 64괘 정보 (괘번호: (괘이름, 이진코드))
+        # 64괘 정보 (괘번호: (괘이름, 이진코드)) - 정확한 전통 패턴
         self.hexagrams = {
-            1: ("1괘", "111111"),
-            2: ("2괘", "222222"),
-            3: ("3괘", "212211"),
-            4: ("4괘", "122121"),
-            5: ("5괘", "212111"),
-            6: ("6괘", "111212"),
-            7: ("7괘", "222212"),
-            8: ("8괘", "212222"),
-            9: ("9괘", "111211"),
-            10: ("10괘", "111122"),
-            11: ("11괘", "222111"),
-            12: ("12괘", "111222"),
-            13: ("13괘", "111121"),
-            14: ("14괘", "121111"),
-            15: ("15괘", "222122"),
-            16: ("16괘", "211222"),
-            17: ("17괘", "122211"),
-            18: ("18괘", "122211"),
-            19: ("19괘", "222122"),
-            20: ("20괘", "211222"),
-            21: ("21괘", "121211"),
-            22: ("22괘", "122121"),
-            23: ("23괘", "122222"),
-            24: ("24괘", "222211"),
-            25: ("25괘", "111211"),
-            26: ("26괘", "122111"),
-            27: ("27괘", "122211"),
-            28: ("28괘", "122211"),
-            29: ("29괘", "212212"),
-            30: ("30괘", "121121"),
-            31: ("31괘", "122122"),
-            32: ("32괘", "211211"),
-            33: ("33괘", "111122"),
-            34: ("34괘", "211111"),
-            35: ("35괘", "121222"),
-            36: ("36괘", "222121"),
-            37: ("37괘", "211121"),
-            38: ("38괘", "121122"),
-            39: ("39괘", "212122"),
-            40: ("40괘", "211212"),
-            41: ("41괘", "122122"),
-            42: ("42괘", "211211"),
-            43: ("43괘", "122111"),
-            44: ("44괘", "111211"),
-            45: ("45괘", "122222"),
-            46: ("46괘", "222211"),
-            47: ("47괘", "122212"),
-            48: ("48괘", "212211"),
-            49: ("49괘", "122121"),
-            50: ("50괘", "121211"),
-            51: ("51괘", "211211"),
-            52: ("52괘", "122122"),
-            53: ("53괘", "211122"),
-            54: ("54괘", "211122"),
-            55: ("55괘", "211121"),
-            56: ("56괘", "121122"),
-            57: ("57괘", "211211"),
-            58: ("58괘", "122122"),
-            59: ("59괘", "211212"),
-            60: ("60괘", "212122"),
-            61: ("61괘", "211122"),
-            62: ("62괘", "211122"),
-            63: ("63괘", "212121"),
-            64: ("64괘", "121212")
+            1: ("1괘 - 건위천", "111111"),      # 건위천(乾爲天)
+            2: ("2괘 - 곤위지", "222222"),      # 곤위지(坤爲地)
+            3: ("3괘 - 수뢰둔", "122212"),      # 수뢰둔(水雷屯)
+            4: ("4괘 - 산수몽", "212221"),      # 산수몽(山水蒙)
+            5: ("5괘 - 수천수", "111212"),      # 수천수(水天需)
+            6: ("6괘 - 천수송", "212111"),      # 천수송(天水訟)
+            7: ("7괘 - 지수사", "212222"),      # 지수사(地水師)
+            8: ("8괘 - 수지비", "222212"),      # 수지비(水地比)
+            9: ("9괘 - 풍천소축", "111211"),    # 풍천소축(風天小畜)
+            10: ("10괘 - 천택리", "112111"),    # 천택리(天澤履)
+            11: ("11괘 - 지천태", "111222"),    # 지천태(地天泰)
+            12: ("12괘 - 천지비", "222111"),    # 천지비(天地否)
+            13: ("13괘 - 천화동인", "121111"),  # 천화동인(天火同人)
+            14: ("14괘 - 화천대유", "111121"),  # 화천대유(火天大有)
+            15: ("15괘 - 지산겸", "221222"),    # 지산겸(地山謙)
+            16: ("16괘 - 뢰지예", "222122"),    # 뢰지예(雷地豫)
+            17: ("17괘 - 택뢰수", "122112"),    # 택뢰수(澤雷隨)
+            18: ("18괘 - 산풍고", "211221"),    # 산풍고(山風蠱)
+            19: ("19괘 - 지택림", "112222"),    # 지택림(地澤臨)
+            20: ("20괘 - 풍지관", "222211"),    # 풍지관(風地觀)
+            21: ("21괘 - 화뢰서합", "122121"),  # 화뢰서합(火雷噬嗑)
+            22: ("22괘 - 산화비", "121221"),    # 산화비(山火賁)
+            23: ("23괘 - 산지박", "222221"),    # 산지박(山地剝)
+            24: ("24괘 - 지뢰복", "122222"),    # 지뢰복(地雷復)
+            25: ("25괘 - 천뢰무망", "122111"),  # 천뢰무망(天雷无妄)
+            26: ("26괘 - 산천대축", "111221"),  # 산천대축(山天大畜)
+            27: ("27괘 - 산뢰이", "122221"),    # 산뢰이(山雷頤)
+            28: ("28괘 - 택풍대과", "211112"),  # 택풍대과(澤風大過)
+            29: ("29괘 - 감위수", "212212"),    # 감위수(坎爲水)
+            30: ("30괘 - 리위화", "121121"),    # 리위화(離爲火)
+            31: ("31괘 - 택산함", "221112"),    # 택산함(澤山咸)
+            32: ("32괘 - 뢰풍항", "211122"),    # 뢰풍항(雷風恆)
+            33: ("33괘 - 천산둔", "221111"),    # 천산둔(天山遯)
+            34: ("34괘 - 뢰천대장", "111122"),  # 뢰천대장(雷天大壯)
+            35: ("35괘 - 화지진", "222121"),    # 화지진(火地晉)
+            36: ("36괘 - 지화명이", "121222"),  # 지화명이(地火明夷)
+            37: ("37괘 - 풍화가인", "121211"),  # 풍화가인(風火家人)
+            38: ("38괘 - 화택규", "112121"),    # 화택규(火澤睽)
+            39: ("39괘 - 수산건", "221212"),    # 수산건(Water Mountain Obstruction)
+            40: ("40괘 - 뢰수해", "212122"),    # 뢰수해(Thunder Water Deliverance)
+            41: ("41괘 - 산택손", "112221"),    # 산택손(Mountain Lake Decrease)
+            42: ("42괘 - 풍뢰익", "122211"),    # 풍뢰익(Wind Thunder Increase)
+            43: ("43괘 - 택천쾌", "111112"),    # 택천쾌(Lake Heaven Breakthrough)
+            44: ("44괘 - 천풍구", "211111"),    # 천풍구(Heaven Wind Coming-to-meet)
+            45: ("45괘 - 택지취", "222112"),    # 택지취(Lake Earth Gathering)
+            46: ("46괘 - 지풍승", "211222"),    # 지풍승(Earth Wind Pushing Upward)
+            47: ("47괘 - 택수곤", "212112"),    # 택수곤(Lake Water Oppression)
+            48: ("48괘 - 수풍정", "211212"),    # 수풍정(Water Wind The Well)
+            49: ("49괘 - 택화혁", "121112"),    # 택화혁(Lake Fire Revolution)
+            50: ("50괘 - 화풍정", "211121"),    # 화풍정(Fire Wind The Cauldron)
+            51: ("51괘 - 진위뢰", "122122"),    # 진위뢰(震爲雷)
+            52: ("52괘 - 간위산", "221221"),    # 간위산(艮爲山)
+            53: ("53괘 - 풍산점", "221211"),    # 풍산점(Wind Mountain Development)
+            54: ("54괘 - 뢰택귀매", "112122"),  # 뢰택귀매(Thunder Lake Marrying Maiden)
+            55: ("55괘 - 뢰화풍", "121122"),    # 뢰화풍(Thunder Fire Abundance)
+            56: ("56괘 - 화산려", "221121"),    # 화산려(Fire Mountain The Wanderer)
+            57: ("57괘 - 손위풍", "211211"),    # 손위풍(巽爲風)
+            58: ("58괘 - 태위택", "112112"),    # 태위택(兌爲澤)
+            59: ("59괘 - 풍수환", "212211"),    # 풍수환(Wind Water Dispersion)
+            60: ("60괘 - 수택절", "112212"),    # 수택절(Water Lake Limitation)
+            61: ("61괘 - 풍택중부", "112211"),  # 풍택중부(Wind Lake Inner Truth)
+            62: ("62괘 - 뢰산소과", "221122"),  # 뢰산소과(Thunder Mountain Small Exceeding)
+            63: ("63괘 - 수화기제", "121212"),  # 수화기제(Water Fire After Completion)
+            64: ("64괘 - 화수미제", "212121"),  # 화수미제(Fire Water Before Completion)
         }
     
     def find_hexagram(self, pattern):
@@ -130,17 +133,114 @@ class IChingWeb:
                 return (number, name)
         return None
     
+    def extract_hexagram_number(self, hexagram_name):
+        """괘 이름에서 괘 번호만 추출 (예: '3괘 - 수뢰둔' -> '3괘')"""
+        if ' - ' in hexagram_name:
+            return hexagram_name.split(' - ')[0]
+        return hexagram_name
+    
     def get_interpretation_text(self, hexagram_name):
         """해석 파일에서 텍스트 읽기"""
         try:
+            # 괘 번호만 추출하여 파일명 생성
+            file_name = self.extract_hexagram_number(hexagram_name)
+            
+            # PyInstaller 환경 확인
+            if getattr(sys, 'frozen', False):
+                # PyInstaller로 빌드된 실행 파일인 경우
+                if hasattr(sys, '_MEIPASS'):
+                    # 임시 폴더에서 실행 중인 경우
+                    application_path = Path(sys._MEIPASS)
+                    print(f"DEBUG: PyInstaller 임시 경로: {application_path}")
+                else:
+                    # 실행 파일 위치
+                    application_path = Path(sys.executable).parent
+                    print(f"DEBUG: PyInstaller 실행 파일 경로: {application_path}")
+            else:
+                # 일반 Python 스크립트로 실행 중인 경우
+                application_path = Path(__file__).parent
+                print(f"DEBUG: Python 스크립트 경로: {application_path}")
+            
+            # 현재 실행 경로 확인
+            current_dir = Path.cwd()
+            print(f"DEBUG: 현재 작업 디렉토리: {current_dir}")
+            
             # Vercel 환경에서는 해석 파일을 프로젝트 루트에서 찾기
             if os.environ.get('VERCEL'):
-                interpretation_path = Path(f"해석/{hexagram_name}.docx")
+                interpretation_path = Path(f"해석/{file_name}.docx")
             else:
-                interpretation_path = Path(f"해석/{hexagram_name}.docx")
+                # 로컬 환경에서 여러 경로 시도 (PyInstaller 환경 및 macOS .app 번들 포함)
+                possible_paths = [
+                    # PyInstaller 환경 우선 경로
+                    application_path / "해석" / f"{file_name}.docx",
+                    current_dir / "해석" / f"{file_name}.docx",
+                    
+                    # 복사된 해석 폴더들
+                    Path("/Users/bpark/Desktop/0_Python/주역/dist/해석") / f"{file_name}.docx",
+                    Path("/Users/bpark/Desktop/0_Python/주역/dist/주역괘해석/해석") / f"{file_name}.docx",
+                    Path("/Users/bpark/Desktop/0_Python/주역/dist/주역괘해석.app/Contents/MacOS/해석") / f"{file_name}.docx",
+                    
+                    # 기본 경로들
+                    Path(f"해석/{file_name}.docx"),  # 현재 디렉토리에서
+                    Path(f"../해석/{file_name}.docx"),  # 상위 디렉토리에서
+                    Path(f"../../해석/{file_name}.docx"),  # 두 단계 상위 디렉토리에서
+                    Path(f"/Users/bpark/Desktop/0_Python/주역/해석/{file_name}.docx"),  # 원본 절대 경로
+                    
+                    # PyInstaller _internal 폴더를 고려한 경로
+                    Path(current_dir.parent.parent / "해석" / f"{file_name}.docx"),
+                    Path(current_dir.parent / "해석" / f"{file_name}.docx"),
+                ]
+                
+                print(f"DEBUG: 시도할 경로들:")
+                for i, path in enumerate(possible_paths):
+                    exists = path.exists()
+                    print(f"  {i+1}. {path} -> 존재: {exists}")
+                    if exists:
+                        print(f"      파일 크기: {path.stat().st_size} bytes")
+                
+                interpretation_path = None
+                for path in possible_paths:
+                    if path.exists():
+                        interpretation_path = path
+                        print(f"DEBUG: 찾은 경로: {interpretation_path}")
+                        break
+                
+                if interpretation_path is None:
+                    # 해석 폴더 자체를 찾기 위한 추가 시도
+                    base_paths = [
+                        application_path,
+                        Path("/Users/bpark/Desktop/0_Python/주역"),
+                        Path("/Users/bpark/Desktop/0_Python/주역/dist"),
+                        Path("/Users/bpark/Desktop/0_Python/주역/dist/주역괘해석"),
+                        Path("/Users/bpark/Desktop/0_Python/주역/dist/주역괘해석.app/Contents/MacOS"),
+                        current_dir,
+                        current_dir.parent,
+                        current_dir.parent.parent,
+                        current_dir.parent.parent.parent,
+                    ]
+                    
+                    print(f"DEBUG: 해석 폴더 검색...")
+                    for base_path in base_paths:
+                        interpretation_dir = base_path / "해석"
+                        target_file = interpretation_dir / f"{file_name}.docx"
+                        exists = target_file.exists()
+                        print(f"  검색: {target_file} -> 존재: {exists}")
+                        if exists:
+                            interpretation_path = target_file
+                            print(f"DEBUG: 최종 찾은 경로: {interpretation_path}")
+                            break
+                    
+                    if interpretation_path is None:
+                        error_msg = f"{file_name}에 대한 해석 파일을 찾을 수 없습니다.\n"
+                        error_msg += f"현재 작업 디렉토리: {current_dir}\n"
+                        error_msg += f"애플리케이션 경로: {application_path}\n"
+                        error_msg += f"실행 파일 경로: {sys.executable if getattr(sys, 'frozen', False) else 'N/A'}\n"
+                        error_msg += f"찾는 파일: {file_name}.docx\n"
+                        error_msg += "시도한 모든 경로에서 파일을 찾을 수 없습니다."
+                        return error_msg
             
             if not interpretation_path.exists():
-                return f"{hexagram_name}에 대한 해석 파일을 찾을 수 없습니다."
+                return f"{file_name}에 대한 해석 파일을 찾을 수 없습니다."
             
             doc = Document(interpretation_path)
             
@@ -149,10 +249,11 @@ class IChingWeb:
                 if paragraph.text.strip():
                     text_content.append(paragraph.text.strip())
             
-            return '\n'.join(text_content) if text_content else f"{hexagram_name}에 대한 해석 내용이 없습니다."
+            return '\n'.join(text_content) if text_content else f"{file_name}에 대한 해석 내용이 없습니다."
             
         except Exception as e:
-            return f"{hexagram_name} 해석 파일 읽기 오류: {str(e)}"
+            file_name = self.extract_hexagram_number(hexagram_name)
+            return f"{file_name} 해석 파일 읽기 오류: {str(e)}\n디버깅 정보: 현재 디렉토리={Path.cwd()}, 실행파일={getattr(sys, 'executable', 'N/A')}"
     
     def calculate_final_interpretation(self, original_hexagram, changed_hexagram, moving_lines, lines):
         """동효 개수에 따른 최종 해석 계산"""
@@ -170,15 +271,30 @@ class IChingWeb:
             rule = f"동효 2개 → 본괘 해석, {max(moving_lines)+1}효 강조"
             
         elif moving_count == 3:
-            lower_moving = [x for x in moving_lines if x < 3]
-            upper_moving = [x for x in moving_lines if x >= 3]
+            # 3개: 하괘(1-3효)는 본괘, 상괘(4-6효)는 지괘의 조합으로 새로운 괘 생성
+            # 지괘 계산 (모든 동효 반전)
+            changed_lines = lines.copy()
+            for i in moving_lines:
+                changed_lines[i] = '2' if changed_lines[i] == '1' else '1'
             
-            if len(lower_moving) >= len(upper_moving):
+            # 최종괘 생성: 하괘는 본괘, 상괘는 지괘
+            final_lines = []
+            for i in range(6):
+                if i < 3:  # 하괘 (1-3효): 본괘 사용
+                    final_lines.append(lines[i])
+                else:  # 상괘 (4-6효): 지괘 사용
+                    final_lines.append(changed_lines[i])
+            
+            # 새로운 괘 찾기
+            final_pattern = ''.join(final_lines)
+            final_hexagram = self.find_hexagram(final_pattern)
+            
+            if not final_hexagram:
+                # 찾을 수 없으면 본괘 사용 (fallback)
                 final_hexagram = original_hexagram
-                rule = f"동효 3개 → 하괘 위주, 본괘 해석"
+                rule = f"동효 3개 → 조합괘를 찾을 수 없어 본괘 해석"
             else:
-                final_hexagram = changed_hexagram
-                rule = f"동효 3개 → 상괘 위주, 지괘 해석"
+                rule = f"동효 3개 → 하괘(본괘) + 상괘(지괘) 조합 해석"
             highlight_lines = []
             
         elif moving_count == 4:
@@ -307,6 +423,24 @@ def auto_generate():
     except Exception as e:
         return jsonify({'error': f'자동 생성 중 오류가 발생했습니다: {str(e)}'}), 500
 
+def sanitize_filename(filename):
+    """파일명에서 사용할 수 없는 문자들을 제거하거나 변환"""
+    # Windows/Mac/Linux에서 파일명에 사용할 수 없는 문자들
+    invalid_chars = r'[<>:"/\\|?*]'
+    # 특수문자를 언더스코어로 변환
+    sanitized = re.sub(invalid_chars, '_', filename)
+    # 연속된 공백이나 언더스코어를 하나로 줄임
+    sanitized = re.sub(r'[_\s]+', '_', sanitized)
+    # 시작과 끝의 공백, 언더스코어 제거
+    sanitized = sanitized.strip('_. ')
+    # 파일명이 너무 길면 자르기 (확장자 제외하고 100자로 제한)
+    if len(sanitized) > 100:
+        sanitized = sanitized[:100]
+    # 빈 문자열이면 기본값 사용
+    if not sanitized:
+        sanitized = "점괘결과"
+    return sanitized
+
 @app.route('/api/save', methods=['POST'])
 def save_result():
     """점괘 결과를 워드 파일로 저장하고 다운로드"""
@@ -316,9 +450,20 @@ def save_result():
         # 출력 폴더 생성
         output_dir = get_output_dir()
         
-        # 파일명 생성 (영문으로 변경)
+        # 질문 텍스트 가져오기
+        question_text = data.get('question', '').strip()
+        if not question_text:
+            question_text = "질문없음"
+        
+        # 파일명 생성 (날짜 + 질문)
         now = datetime.now()
-        filename = f"iching_result_{now.strftime('%Y%m%d_%H%M%S')}.docx"
+        date_str = now.strftime('%Y%m%d_%H%M%S')
+        
+        # 질문을 파일명으로 사용할 수 있도록 처리
+        sanitized_question = sanitize_filename(question_text)
+        
+        # 파일명 조합: 날짜_질문.docx
+        filename = f"{date_str}_{sanitized_question}.docx"
         filepath = output_dir / filename
         
         # 워드 문서 생성
@@ -333,7 +478,6 @@ def save_result():
         
         # 질문
         doc.add_heading('질문', level=1)
-        question_text = data.get('question', '') if data.get('question', '').strip() else "질문이 입력되지 않았습니다."
         doc.add_paragraph(question_text)
         doc.add_paragraph("")
         
@@ -474,9 +618,20 @@ def send_email():
         # 출력 폴더 생성
         output_dir = get_output_dir()
         
-        # 파일명 생성 (영문으로 변경)
+        # 질문 텍스트 가져오기
+        question_text = data.get('question', '').strip()
+        if not question_text:
+            question_text = "질문없음"
+        
+        # 파일명 생성 (날짜 + 질문)
         now = datetime.now()
-        filename = f"iching_result_{now.strftime('%Y%m%d_%H%M%S')}.docx"
+        date_str = now.strftime('%Y%m%d_%H%M%S')
+        
+        # 질문을 파일명으로 사용할 수 있도록 처리
+        sanitized_question = sanitize_filename(question_text)
+        
+        # 파일명 조합: 날짜_질문.docx
+        filename = f"{date_str}_{sanitized_question}.docx"
         filepath = output_dir / filename
         
         # 워드 문서 생성 (기존 save_result와 동일한 로직)
@@ -491,7 +646,6 @@ def send_email():
         
         # 질문
         doc.add_heading('질문', level=1)
-        question_text = data.get('question', '') if data.get('question', '').strip() else "질문이 입력되지 않았습니다."
         doc.add_paragraph(question_text)
         doc.add_paragraph("")
         
@@ -863,7 +1017,7 @@ if __name__ == '__main__':
         Path("해석").mkdir(exist_ok=True)
         Path("출력").mkdir(exist_ok=True)
     
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5002, debug=True)
 
 # Vercel용 WSGI 애플리케이션
 application = app 

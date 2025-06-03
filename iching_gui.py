@@ -10,6 +10,7 @@ from docx.shared import RGBColor, Pt
 from docx.enum.text import WD_COLOR_INDEX
 from datetime import datetime
 import random
+import re
 
 class IChingReader:
     def __init__(self, root):
@@ -37,72 +38,72 @@ class IChingReader:
         self.current_rule = ""
         self.current_highlight_lines = []  # 강조할 효 번호들
         
-        # 64괘 정보 (괘번호: (괘이름, 이진코드))
+        # 64괘 정보 (괘번호: (괘이름, 이진코드)) - 정확한 전통 패턴
         self.hexagrams = {
             1: ("1괘", "111111"),
             2: ("2괘", "222222"),
-            3: ("3괘", "212211"),
-            4: ("4괘", "122121"),
-            5: ("5괘", "212111"),
-            6: ("6괘", "111212"),
-            7: ("7괘", "222212"),
-            8: ("8괘", "212222"),
+            3: ("3괘", "122212"),
+            4: ("4괘", "212221"),
+            5: ("5괘", "111212"),
+            6: ("6괘", "212111"),
+            7: ("7괘", "212222"),
+            8: ("8괘", "222212"),
             9: ("9괘", "111211"),
-            10: ("10괘", "111122"),
-            11: ("11괘", "222111"),
-            12: ("12괘", "111222"),
-            13: ("13괘", "111121"),
-            14: ("14괘", "121111"),
-            15: ("15괘", "222122"),
-            16: ("16괘", "211222"),
-            17: ("17괘", "122211"),
-            18: ("18괘", "122211"),
-            19: ("19괘", "222122"),
-            20: ("20괘", "211222"),
-            21: ("21괘", "121211"),
-            22: ("22괘", "122121"),
-            23: ("23괘", "122222"),
-            24: ("24괘", "222211"),
-            25: ("25괘", "111211"),
-            26: ("26괘", "122111"),
-            27: ("27괘", "122211"),
-            28: ("28괘", "122211"),
+            10: ("10괘", "112111"),
+            11: ("11괘", "111222"),
+            12: ("12괘", "222111"),
+            13: ("13괘", "121111"),
+            14: ("14괘", "111121"),
+            15: ("15괘", "221222"),
+            16: ("16괘", "222122"),
+            17: ("17괘", "122112"),
+            18: ("18괘", "211221"),
+            19: ("19괘", "112222"),
+            20: ("20괘", "222211"),
+            21: ("21괘", "122121"),
+            22: ("22괘", "121221"),
+            23: ("23괘", "222221"),
+            24: ("24괘", "122222"),
+            25: ("25괘", "122111"),
+            26: ("26괘", "111221"),
+            27: ("27괘", "122221"),
+            28: ("28괘", "211112"),
             29: ("29괘", "212212"),
             30: ("30괘", "121121"),
-            31: ("31괘", "122122"),
-            32: ("32괘", "211211"),
-            33: ("33괘", "111122"),
-            34: ("34괘", "211111"),
-            35: ("35괘", "121222"),
-            36: ("36괘", "222121"),
-            37: ("37괘", "211121"),
-            38: ("38괘", "121122"),
-            39: ("39괘", "212122"),
-            40: ("40괘", "211212"),
-            41: ("41괘", "122122"),
-            42: ("42괘", "211211"),
-            43: ("43괘", "122111"),
-            44: ("44괘", "111211"),
-            45: ("45괘", "122222"),
-            46: ("46괘", "222211"),
-            47: ("47괘", "122212"),
-            48: ("48괘", "212211"),
-            49: ("49괘", "122121"),
-            50: ("50괘", "121211"),
-            51: ("51괘", "211211"),
-            52: ("52괘", "122122"),
-            53: ("53괘", "211122"),
-            54: ("54괘", "211122"),
-            55: ("55괘", "211121"),
-            56: ("56괘", "121122"),
+            31: ("31괘", "221112"),
+            32: ("32괘", "211122"),
+            33: ("33괘", "221111"),
+            34: ("34괘", "111122"),
+            35: ("35괘", "222121"),
+            36: ("36괘", "121222"),
+            37: ("37괘", "121211"),
+            38: ("38괘", "112121"),
+            39: ("39괘", "221212"),
+            40: ("40괘", "212122"),
+            41: ("41괘", "112221"),
+            42: ("42괘", "122211"),
+            43: ("43괘", "111112"),
+            44: ("44괘", "211111"),
+            45: ("45괘", "222112"),
+            46: ("46괘", "211222"),
+            47: ("47괘", "212112"),
+            48: ("48괘", "211212"),
+            49: ("49괘", "121112"),
+            50: ("50괘", "211121"),
+            51: ("51괘", "122122"),
+            52: ("52괘", "221221"),
+            53: ("53괘", "221211"),
+            54: ("54괘", "112122"),
+            55: ("55괘", "121122"),
+            56: ("56괘", "221121"),
             57: ("57괘", "211211"),
-            58: ("58괘", "122122"),
-            59: ("59괘", "211212"),
-            60: ("60괘", "212122"),
-            61: ("61괘", "211122"),
-            62: ("62괘", "211122"),
-            63: ("63괘", "212121"),
-            64: ("64괘", "121212")
+            58: ("58괘", "112112"),
+            59: ("59괘", "212211"),
+            60: ("60괘", "112212"),
+            61: ("61괘", "112211"),
+            62: ("62괘", "221122"),
+            63: ("63괘", "121212"),
+            64: ("64괘", "212121")
         }
         
         self.setup_menu()
@@ -161,14 +162,13 @@ class IChingReader:
         for i in range(6):
             line_value = random.choice(['1', '2'])
             lines.append(line_value)
-            self.line_entries[i].delete(0, tk.END)
-            self.line_entries[i].insert(0, line_value)
+            self.line_vars[i].set(line_value)
         
-        # 동효 랜덤 생성 (확률 가중치 적용)
-        # 동효 개수별 확률: 0개(50%), 1개(30%), 2개(15%), 3개(5%)
+        # 동효 랜덤 생성 (실제 동전 던지기 확률 적용)
+        # 실제 확률: 0개(17.8%), 1개(35.6%), 2개(29.7%), 3개(13.2%), 4개(3.3%), 5개(0.4%), 6개(0.02%)
         moving_count = random.choices(
-            population=[0, 1, 2, 3], 
-            weights=[50, 30, 15, 5], 
+            population=[0, 1, 2, 3, 4, 5, 6], 
+            weights=[17.8, 35.6, 29.7, 13.2, 3.3, 0.4, 0.02], 
             k=1
         )[0]
         
@@ -183,7 +183,8 @@ class IChingReader:
         messagebox.showinfo("자동 괘 뽑기 완료", 
                           f"자동으로 괘가 생성되었습니다!\n"
                           f"효: {' '.join(lines)}\n"
-                          f"동효 개수: {moving_count}개")
+                          f"동효 개수: {moving_count}개\n"
+                          f"(실제 동전 던지기 확률 적용)")
     
     def change_font_size(self, scale):
         """글자 크기 변경"""
@@ -215,7 +216,7 @@ class IChingReader:
             self.question_entry.config(font=('맑은 고딕', self.font_sizes['entry']))
             
             # 입력 필드들
-            for entry in self.line_entries:
+            for entry in self.line_vars:
                 entry.config(font=('맑은 고딕', self.font_sizes['entry']))
             
             # 괘 이름 라벨들
@@ -272,14 +273,20 @@ class IChingReader:
    - 5개: 지괘 + 고정효 강조
    - 6개: 지괘 전체 해석
 
-5. 점괘 결과 저장:
+5. 자동 괘 뽑기:
+   - 실제 동전 던지기 확률을 적용합니다
+   - 동효 확률: 0개(17.8%), 1개(35.6%), 2개(29.7%), 
+     3개(13.2%), 4개(3.3%), 5개(0.4%), 6개(0.02%)
+   - 동효 있을 확률: 82.2%
+
+6. 점괘 결과 저장:
    - 파일 > 점괘 결과 저장으로 결과를 워드 파일로 저장
    - 출력 폴더에 날짜별로 저장됩니다
 
-6. 글자 크기:
+7. 글자 크기:
    - 설정 > 글자 크기 메뉴에서 조절 가능
 
-7. 결과:
+8. 결과:
    - 본괘, 지괘, 최종해석이 각각 표시됩니다
    - 중요한 효는 노란색으로 강조됩니다
         """
@@ -338,7 +345,7 @@ class IChingReader:
         question_frame.columnconfigure(1, weight=1)
         
         # 설명
-        self.desc_label = ttk.Label(main_frame, text="1효부터 6효까지 입력하고 동효(변효)를 체크하세요 (1=양, 2=음)", 
+        self.desc_label = ttk.Label(main_frame, text="1효부터 6효까지 음양을 선택하고 동효(변효)를 체크하세요", 
                               font=('맑은 고딕', self.font_sizes['subtitle']))
         self.desc_label.grid(row=2, column=0, columnspan=4, pady=(0, 20))
         
@@ -346,30 +353,30 @@ class IChingReader:
         input_frame = ttk.LabelFrame(main_frame, text="효 입력 및 동효 선택", padding="15")
         input_frame.grid(row=3, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=(0, 25))
         
-        self.line_entries = []
+        self.line_vars = []  # 효 선택 변수들 (1=양, 2=음)
         self.moving_vars = []  # 동효 체크박스 변수들
         
         for i in range(6):
-            # 효 번호 라벨
-            ttk.Label(input_frame, text=f"{i+1}효:").grid(row=0, column=i*3, padx=(10, 5), sticky=tk.W)
+            # 효 번호 라벨 (가운데 정렬)
+            ttk.Label(input_frame, text=f"{i+1}효:").grid(row=0, column=i*4, padx=(10, 5))
             
-            # 음양 입력 필드
-            entry = ttk.Entry(input_frame, width=3, justify='center', 
-                            font=('맑은 고딕', self.font_sizes['entry']))
-            entry.grid(row=0, column=i*3+1, padx=(0, 8))
-            self.line_entries.append(entry)
+            # 음양 선택 라디오 버튼
+            line_var = tk.StringVar(value="1")  # 기본값: 양
+            self.line_vars.append(line_var)
             
-            # 동효 체크박스
+            # 양 버튼 (가운데 정렬)
+            yang_btn = ttk.Radiobutton(input_frame, text="양(―)", variable=line_var, value="1")
+            yang_btn.grid(row=1, column=i*4, padx=(10, 2))
+            
+            # 음 버튼 (가운데 정렬)
+            yin_btn = ttk.Radiobutton(input_frame, text="음(- -)", variable=line_var, value="2")
+            yin_btn.grid(row=2, column=i*4, padx=(10, 2))
+            
+            # 동효 체크박스 (가운데 정렬, 위쪽에 간격 추가)
             moving_var = tk.BooleanVar()
             self.moving_vars.append(moving_var)
             check = ttk.Checkbutton(input_frame, text="동효", variable=moving_var)
-            check.grid(row=0, column=i*3+2, padx=(0, 20))
-            
-            # 엔터키로 다음 입력칸으로 이동
-            if i < 5:
-                entry.bind('<Return>', lambda e, next_entry=i+1: self.line_entries[next_entry].focus())
-            else:
-                entry.bind('<Return>', lambda e: self.identify_hexagram())
+            check.grid(row=3, column=i*4, padx=(10, 20), pady=(10, 0))
         
         # 버튼 프레임
         button_frame = ttk.Frame(main_frame)
@@ -468,15 +475,13 @@ class IChingReader:
         
         # 입력값 검증 및 수집
         lines = []
-        for i, entry in enumerate(self.line_entries):
-            value = entry.get().strip()
+        for i, var in enumerate(self.line_vars):
+            value = var.get()
             if not value:
                 messagebox.showerror("입력 오류", f"{i+1}효를 입력해주세요.")
-                entry.focus()
                 return
             if value not in ['1', '2']:
                 messagebox.showerror("입력 오류", f"{i+1}효는 1(양) 또는 2(음)만 입력 가능합니다.")
-                entry.focus()
                 return
             lines.append(value)
         
@@ -559,16 +564,30 @@ class IChingReader:
             rule = f"동효 2개 → 본괘 해석, {max(moving_lines)+1}효 강조"
             
         elif moving_count == 3:
-            # 3개: 1-3효 동효면 본괘, 4-6효 동효면 지괘
-            lower_moving = [x for x in moving_lines if x < 3]  # 1-3효
-            upper_moving = [x for x in moving_lines if x >= 3]  # 4-6효
+            # 3개: 하괘(1-3효)는 본괘, 상괘(4-6효)는 지괘의 조합으로 새로운 괘 생성
+            # 지괘 계산 (모든 동효 반전)
+            changed_lines = lines.copy()
+            for i in moving_lines:
+                changed_lines[i] = '2' if changed_lines[i] == '1' else '1'
             
-            if len(lower_moving) >= len(upper_moving):
+            # 최종괘 생성: 하괘는 본괘, 상괘는 지괘
+            final_lines = []
+            for i in range(6):
+                if i < 3:  # 하괘 (1-3효): 본괘 사용
+                    final_lines.append(lines[i])
+                else:  # 상괘 (4-6효): 지괘 사용
+                    final_lines.append(changed_lines[i])
+            
+            # 새로운 괘 찾기
+            final_pattern = ''.join(final_lines)
+            final_hexagram = self.find_hexagram(final_pattern)
+            
+            if not final_hexagram:
+                # 찾을 수 없으면 본괘 사용 (fallback)
                 final_hexagram = original_hexagram
-                rule = f"동효 3개 → 하괘 위주, 본괘 해석"
+                rule = f"동효 3개 → 조합괘를 찾을 수 없어 본괘 해석"
             else:
-                final_hexagram = changed_hexagram
-                rule = f"동효 3개 → 상괘 위주, 지괘 해석"
+                rule = f"동효 3개 → 하괘(본괘) + 상괘(지괘) 조합 해석"
             highlight_lines = []
             
         elif moving_count == 4:
@@ -601,6 +620,24 @@ class IChingReader:
         self.rule_label.config(text=rule)
         self.load_interpretation_with_highlight(final_hexagram[1], self.final_text, highlight_lines)
     
+    def sanitize_filename(self, filename):
+        """파일명에서 사용할 수 없는 문자들을 제거하거나 변환"""
+        # Windows/Mac/Linux에서 파일명에 사용할 수 없는 문자들
+        invalid_chars = r'[<>:"/\\|?*]'
+        # 특수문자를 언더스코어로 변환
+        sanitized = re.sub(invalid_chars, '_', filename)
+        # 연속된 공백이나 언더스코어를 하나로 줄임
+        sanitized = re.sub(r'[_\s]+', '_', sanitized)
+        # 시작과 끝의 공백, 언더스코어 제거
+        sanitized = sanitized.strip('_. ')
+        # 파일명이 너무 길면 자르기 (확장자 제외하고 100자로 제한)
+        if len(sanitized) > 100:
+            sanitized = sanitized[:100]
+        # 빈 문자열이면 기본값 사용
+        if not sanitized:
+            sanitized = "점괘결과"
+        return sanitized
+
     def save_result(self):
         """점괘 결과를 워드 파일로 저장"""
         if not self.current_original:
@@ -611,9 +648,20 @@ class IChingReader:
         output_dir = Path("출력")
         output_dir.mkdir(exist_ok=True)
         
-        # 파일명 생성 (날짜_시간 형식)
+        # 질문 텍스트 가져오기
+        question_text = self.current_question.strip() if self.current_question else ""
+        if not question_text:
+            question_text = "질문없음"
+        
+        # 파일명 생성 (날짜 + 질문)
         now = datetime.now()
-        filename = f"점괘결과_{now.strftime('%Y%m%d_%H%M%S')}.docx"
+        date_str = now.strftime('%Y%m%d_%H%M%S')
+        
+        # 질문을 파일명으로 사용할 수 있도록 처리
+        sanitized_question = self.sanitize_filename(question_text)
+        
+        # 파일명 조합: 날짜_질문.docx
+        filename = f"{date_str}_{sanitized_question}.docx"
         filepath = output_dir / filename
         
         try:
@@ -798,29 +846,29 @@ class IChingReader:
                 if paragraph.text.strip():
                     content.append(paragraph.text)
             
-            # 텍스트 영역에 표시 (효 사이에 빈 줄 추가)
+            # 텍스트 영역에 표시 (전체 설명과 효 설명들 사이, 효들 사이, 효와 전체 사이에 빈 줄 추가)
             text_widget.delete(1.0, tk.END)
             if content:
                 formatted_content = []
-                prev_line_was_effect = False
-                found_first_effect = False
                 
                 for i, line in enumerate(content):
                     # 현재 줄이 효 설명인지 확인 (1효, 2효, 3효, 4효, 5효, 6효로 시작하는지)
                     current_is_effect = any(line.strip().startswith(f"{j}효") for j in range(1, 7))
                     
-                    # 첫 번째 효가 나타나기 전에 빈 줄 추가 (괘 전체 설명과 1효 사이)
-                    if current_is_effect and not found_first_effect:
-                        if formatted_content:  # 이전에 내용이 있었다면
+                    # 이전 줄이 있는 경우 간격 처리
+                    if i > 0:
+                        prev_line = content[i-1]
+                        prev_is_effect = any(prev_line.strip().startswith(f"{j}효") for j in range(1, 7))
+                        
+                        # 경우 1: 이전 줄이 효가 아니고 현재 줄이 효 (전체 설명과 첫 번째 효 사이)
+                        # 경우 2: 이전 줄이 효이고 현재 줄도 효 (효와 효 사이)
+                        # 경우 3: 이전 줄이 효이고 현재 줄이 효가 아님 (효와 전체 설명 사이)
+                        if (not prev_is_effect and current_is_effect) or \
+                           (prev_is_effect and current_is_effect) or \
+                           (prev_is_effect and not current_is_effect):
                             formatted_content.append("")
-                        found_first_effect = True
-                    
-                    # 이전 줄이 효였고 현재 줄도 효면 빈 줄 추가 (효와 효 사이)
-                    elif prev_line_was_effect and current_is_effect and i > 0:
-                        formatted_content.append("")
                     
                     formatted_content.append(line)
-                    prev_line_was_effect = current_is_effect
                 
                 text_widget.insert(tk.END, '\n'.join(formatted_content))
             else:
@@ -835,8 +883,8 @@ class IChingReader:
         self.question_entry.delete(0, tk.END)
         
         # 효 입력 지우기
-        for entry in self.line_entries:
-            entry.delete(0, tk.END)
+        for var in self.line_vars:
+            var.set("1")
         for var in self.moving_vars:
             var.set(False)
             
@@ -863,7 +911,7 @@ class IChingReader:
         self.question_entry.focus()
     
     def get_interpretation_text(self, hexagram_name):
-        """괘 해석 텍스트를 파일에서 읽어오기 (효 사이에 빈 줄 추가)"""
+        """괘 해석 텍스트를 파일에서 읽어오기 (전체 설명과 효 설명들 사이, 효들 사이, 효와 전체 사이에 빈 줄 추가)"""
         doc_path = Path(f"해석/{hexagram_name}.docx")
         
         if not doc_path.exists():
@@ -877,27 +925,27 @@ class IChingReader:
                     content.append(paragraph.text)
             
             if content:
-                # 효 사이에 빈 줄 추가
+                # 전체 설명과 효 설명들 사이, 효들 사이, 효와 전체 사이에 빈 줄 추가
                 formatted_content = []
-                prev_line_was_effect = False
-                found_first_effect = False
                 
                 for i, line in enumerate(content):
                     # 현재 줄이 효 설명인지 확인
                     current_is_effect = any(line.strip().startswith(f"{j}효") for j in range(1, 7))
                     
-                    # 첫 번째 효가 나타나기 전에 빈 줄 추가 (괘 전체 설명과 1효 사이)
-                    if current_is_effect and not found_first_effect:
-                        if formatted_content:  # 이전에 내용이 있었다면
+                    # 이전 줄이 있는 경우 간격 처리
+                    if i > 0:
+                        prev_line = content[i-1]
+                        prev_is_effect = any(prev_line.strip().startswith(f"{j}효") for j in range(1, 7))
+                        
+                        # 경우 1: 이전 줄이 효가 아니고 현재 줄이 효 (전체 설명과 첫 번째 효 사이)
+                        # 경우 2: 이전 줄이 효이고 현재 줄도 효 (효와 효 사이)
+                        # 경우 3: 이전 줄이 효이고 현재 줄이 효가 아님 (효와 전체 설명 사이)
+                        if (not prev_is_effect and current_is_effect) or \
+                           (prev_is_effect and current_is_effect) or \
+                           (prev_is_effect and not current_is_effect):
                             formatted_content.append("")
-                        found_first_effect = True
-                    
-                    # 이전 줄이 효였고 현재 줄도 효면 빈 줄 추가 (효와 효 사이)
-                    elif prev_line_was_effect and current_is_effect and i > 0:
-                        formatted_content.append("")
                     
                     formatted_content.append(line)
-                    prev_line_was_effect = current_is_effect
                 
                 return '\n'.join(formatted_content)
             else:

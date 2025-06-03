@@ -394,6 +394,22 @@
             background: #fafafa;
         }
 
+        /* 효간 간격 추가 */
+        .result-text .effect-line {
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            line-height: 1.7;
+        }
+
+        .result-text .effect-line:not(:last-child) {
+            border-bottom: 2px solid #e8e9ea;
+            margin-bottom: 24px;
+        }
+
+        .result-text .effect-line:last-child {
+            margin-bottom: 0;
+        }
+
         .highlight {
             background: #fff3cd !important;
             color: #856404 !important;
@@ -454,6 +470,179 @@
             display: none;
         }
 
+        /* 단계별 진행을 위한 스타일 추가 */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0 40px 0;
+            padding: 0 20px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .step.active {
+            color: white;
+        }
+
+        .step-number {
+            background: rgba(255,255,255,0.3);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: 600;
+        }
+
+        .step.active .step-number {
+            background: white;
+            color: #667eea;
+        }
+
+        .step:not(:last-child)::after {
+            content: '';
+            width: 40px;
+            height: 2px;
+            background: rgba(255,255,255,0.3);
+            margin: 0 20px;
+        }
+
+        .step.active:not(:last-child)::after {
+            background: white;
+        }
+
+        /* 동전 애니메이션 스타일 */
+        .coin-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            flex-direction: column;
+        }
+
+        .coin-container {
+            display: flex;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .coin {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: coinFlip 2s ease-in-out infinite;
+        }
+
+        .coin.stopped {
+            animation: none;
+            transform: rotateY(0deg) translateY(0px);
+        }
+
+        .coin::before {
+            content: '爻';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            font-weight: bold;
+            color: #b8860b;
+        }
+
+        .coin:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+
+        .coin:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes coinFlip {
+            0% {
+                transform: rotateY(0deg) translateY(0px);
+            }
+            25% {
+                transform: rotateY(180deg) translateY(-20px);
+            }
+            50% {
+                transform: rotateY(360deg) translateY(-40px);
+            }
+            75% {
+                transform: rotateY(540deg) translateY(-20px);
+            }
+            100% {
+                transform: rotateY(720deg) translateY(0px);
+            }
+        }
+
+        .coin-text {
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .coin-progress {
+            background: rgba(255,255,255,0.2);
+            width: 300px;
+            height: 6px;
+            border-radius: 3px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .coin-progress-bar {
+            background: #ffd700;
+            height: 100%;
+            width: 0;
+            border-radius: 3px;
+            animation: progressBar 3s ease-in-out;
+        }
+
+        @keyframes progressBar {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        .continue-button {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 30px;
+        }
+
+        .continue-button:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.6);
+        }
+
+        .continue-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 36px;
@@ -500,11 +689,28 @@
         <a href="/">새 점괘</a>
     </div>
 
+    <!-- 단계 인디케이터 추가 -->
+    <div class="step-indicator">
+        <div class="step active" id="step1">
+            <div class="step-number">1</div>
+            <span>질문 입력</span>
+        </div>
+        <div class="step" id="step2">
+            <div class="step-number">2</div>
+            <span>효 설정</span>
+        </div>
+        <div class="step" id="step3">
+            <div class="step-number">3</div>
+            <span>괘 해석</span>
+        </div>
+    </div>
+
     <div class="container">
         <!-- 질문 입력 카드 -->
-        <div class="card">
+        <div class="card" id="questionCard">
             <div class="card-header">
-                <div class="card-title">질문을 입력하세요</div>
+                <div class="card-title">1단계: 질문을 입력하세요</div>
+                <div class="card-subtitle">질문을 상세히 입력하거나 패스하여 다음 단계로 진행하세요</div>
             </div>
             <div class="card-body">
                 <div class="question-grid">
@@ -529,7 +735,7 @@
                     </div>
                     <div class="question-item">
                         <label class="question-label">4) 어떻게</label>
-                        <input type="text" id="how" class="question-input-small" placeholder="예: 성공할까, 진행될까, 해결될까">
+                        <input type="text" id="how" class="question-input-small" placeholder="예: 성공할까, 잘될까, 어떻게 될까">
                     </div>
                 </div>
                 <div class="question-buttons">
@@ -539,15 +745,23 @@
                 <div class="generated-question-container" id="generatedQuestionContainer" style="display: none;">
                     <label class="question-label">생성된 질문</label>
                     <textarea id="generatedQuestion" class="question-input" rows="2" readonly></textarea>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button id="proceedToEffectsBtn" class="btn btn-primary">다음 단계: 효 설정하기</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 효 설정 카드 -->
-        <div class="card">
+        <!-- 효 설정 카드 (처음에는 숨김) -->
+        <div class="card hidden" id="effectsCard">
             <div class="card-header">
-                <div class="card-title">효(爻) 설정</div>
+                <div class="card-title">2단계: 효(爻) 설정</div>
                 <div class="card-subtitle">6개의 효를 왼쪽부터 오른쪽으로 설정하세요. (1효 → 6효)</div>
+            </div>
+            <!-- 질문 내용 표시 영역 추가 -->
+            <div id="questionDisplay" class="card-body" style="background: #f8f9fa; border-bottom: 1px solid #f0f0f0; padding: 20px 30px;">
+                <div style="font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px;">입력된 질문:</div>
+                <div id="displayedQuestion" style="font-size: 16px; color: #555; line-height: 1.5; padding: 12px 16px; background: white; border-radius: 8px; border: 1px solid #e0e0e0;"></div>
             </div>
             <div class="card-body">
                 <div class="lines-grid">
@@ -666,6 +880,20 @@
         </div>
     </div>
 
+    <!-- 동전 애니메이션 모달 -->
+    <div id="coinAnimation" class="coin-animation" style="display: none;">
+        <div class="coin-container">
+            <div class="coin"></div>
+            <div class="coin"></div>
+            <div class="coin"></div>
+        </div>
+        <div class="coin-text">동전을 던져 괘를 뽑고 있습니다...</div>
+        <div class="coin-progress">
+            <div class="coin-progress-bar"></div>
+        </div>
+        <button id="coinContinueBtn" class="continue-button" disabled>잠시 기다려주세요...</button>
+    </div>
+
     <!-- 클립보드 복사 비밀번호 모달 -->
     <div id="clipboardModal" class="email-modal" style="display: none;">
         <div class="email-modal-content">
@@ -708,6 +936,8 @@
             document.getElementById('autoBtn').addEventListener('click', autoGenerate);
             document.getElementById('generateQuestionBtn').addEventListener('click', generateQuestion);
             document.getElementById('skipQuestionBtn').addEventListener('click', skipQuestion);
+            document.getElementById('proceedToEffectsBtn').addEventListener('click', proceedToEffects);
+            document.getElementById('coinContinueBtn').addEventListener('click', hideCoinAnimation);
             
             // 클립보드 비밀번호 엔터키 처리
             document.getElementById('clipboardPassword').addEventListener('keypress', function(e) {
@@ -753,17 +983,18 @@
                 return;
             }
 
-            const question = `${when} ${who}가 ${what}을/를 ${how}?`;
+            // 단순한 질문 생성 (조사 없이)
+            const question = `${when} ${who} ${what} ${how}?`;
             questionInput.value = question;
             document.getElementById('generatedQuestionContainer').style.display = 'block';
-            showMessage('질문이 생성되었습니다.', 'success');
+            showMessage('질문이 생성되었습니다. 다음 단계로 진행하세요.', 'success');
         }
 
         // 질문 입력 패스
         function skipQuestion() {
             questionInput.value = '질문을 입력하지 않았습니다.';
             document.getElementById('generatedQuestionContainer').style.display = 'block';
-            showMessage('질문 입력을 패스했습니다.', 'info');
+            showMessage('질문 입력을 패스했습니다. 다음 단계로 진행하세요.', 'info');
         }
 
         // 클립보드 모달 표시
@@ -797,68 +1028,6 @@
             await copyToClipboard();
         }
 
-        // 괘 식별하기
-        async function identifyHexagram() {
-            try {
-                // 입력값 수집
-                const question = questionInput.value.trim();
-                const lines = selectedLines.slice(); // 복사
-                const movingLines = [];
-                
-                movingCheckboxes.forEach((checkbox, index) => {
-                    if (checkbox.checked) {
-                        movingLines.push(index);
-                    }
-                });
-
-                // 입력 검증
-                if (lines.some(line => !line)) {
-                    showMessage('모든 효를 선택해주세요.', 'error');
-                    return;
-                }
-
-                // 로딩 표시
-                showLoading(true);
-                hideResults();
-
-                // API 호출
-                const response = await fetch('/api/identify', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        question: question,
-                        lines: lines,
-                        moving_lines: movingLines
-                    })
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.error || '서버 오류가 발생했습니다.');
-                }
-
-                // 결과 저장 및 표시
-                currentResult = {
-                    question: question,
-                    lines: lines,
-                    moving_lines: movingLines,
-                    ...result
-                };
-
-                displayResults(result);
-                showMessage('점괘 해석이 완료되었습니다.', 'success');
-                document.getElementById('resultButtons').style.display = 'flex';
-
-            } catch (error) {
-                showMessage(error.message, 'error');
-            } finally {
-                showLoading(false);
-            }
-        }
-
         // 자동 괘 뽑기
         async function autoGenerate() {
             if (!confirm('자동으로 괘를 뽑으시겠습니까?\n현재 설정된 내용이 모두 지워집니다.')) {
@@ -866,6 +1035,36 @@
             }
 
             try {
+                // 질문 단계 건너뛰기 - 기존 질문이 있으면 유지
+                const existingQuestion = questionInput.value.trim();
+                if (!existingQuestion) {
+                    questionInput.value = '자동 점괘 (질문 없음)';
+                }
+                document.getElementById('generatedQuestionContainer').style.display = 'block';
+                
+                // 효 설정 단계로 이동
+                document.getElementById('questionCard').classList.add('hidden');
+                document.getElementById('effectsCard').classList.remove('hidden');
+                updateStepIndicator(2);
+
+                // 질문 내용 표시 - 기존 질문 또는 기본값
+                const displayQuestion = existingQuestion || '자동 점괘 (질문 없음)';
+                document.getElementById('displayedQuestion').textContent = displayQuestion;
+
+                // 동전 애니메이션 표시
+                showCoinAnimation();
+                
+                // 애니메이션이 끝날 때까지 대기
+                await new Promise(resolve => {
+                    const continueBtn = document.getElementById('coinContinueBtn');
+                    const originalHandler = continueBtn.onclick;
+                    continueBtn.onclick = function() {
+                        hideCoinAnimation();
+                        continueBtn.onclick = originalHandler;
+                        resolve();
+                    };
+                });
+
                 showLoading(true);
                 
                 const response = await fetch('/api/auto-generate', {
@@ -900,10 +1099,85 @@
                     movingCheckboxes[index].checked = true;
                 });
 
-                // 자동으로 괘 식별
-                await identifyHexagram();
+                // 로딩 종료
+                showLoading(false);
 
-                showMessage(`자동 괘 뽑기 완료! 동효 ${result.moving_lines.length}개`, 'info');
+                // 효 설정 완료 메시지 표시
+                showMessage('🎯 동전 던지기 완료! 효가 자동으로 설정되었습니다.', 'success');
+                
+                // 잠시 대기 후 자동으로 괘 식별
+                setTimeout(async () => {
+                    try {
+                        await identifyHexagram();
+                        showMessage(`✨ 자동 괘 뽑기 완료! 동효 ${result.moving_lines.length}개가 설정되었습니다.`, 'info');
+                    } catch (identifyError) {
+                        showMessage('괘 식별 중 오류가 발생했습니다: ' + identifyError.message, 'error');
+                    }
+                }, 1500);
+
+            } catch (error) {
+                showMessage(error.message, 'error');
+                showLoading(false);
+            }
+        }
+
+        // 괘 식별하기
+        async function identifyHexagram() {
+            try {
+                // 입력값 수집
+                const question = questionInput.value.trim();
+                const lines = selectedLines.slice(); // 복사
+                const movingLines = [];
+                
+                movingCheckboxes.forEach((checkbox, index) => {
+                    if (checkbox.checked) {
+                        movingLines.push(index);
+                    }
+                });
+
+                // 입력 검증
+                if (lines.some(line => !line)) {
+                    showMessage('모든 효를 선택해주세요.', 'error');
+                    return;
+                }
+
+                // 로딩 표시
+                showLoading(true);
+                hideResults();
+                
+                // 단계 인디케이터 업데이트
+                updateStepIndicator(3);
+
+                // API 호출
+                const response = await fetch('/api/identify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        lines: lines,
+                        moving_lines: movingLines
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || '서버 오류가 발생했습니다.');
+                }
+
+                // 결과 저장 및 표시
+                currentResult = {
+                    question: question,
+                    lines: lines,
+                    moving_lines: movingLines,
+                    ...result
+                };
+
+                displayResults(result);
+                showMessage('점괘 해석이 완료되었습니다.', 'success');
+                document.getElementById('resultButtons').style.display = 'flex';
 
             } catch (error) {
                 showMessage(error.message, 'error');
@@ -1016,7 +1290,7 @@
 
                 // 최종 해석
                 if (currentResult.final) {
-                    copyText += `최종 해석: ${currentResult.final.number}번째 괘 - ${currentResult.final.name}\n`;
+                    copyText += `최종 해석: ${currentResult.final.name}\n`;
                     copyText += `해석 규칙: ${currentResult.final.rule}\n\n`;
                     
                     // 최종 해석 내용 (강조 표시는 텍스트로 변환)
@@ -1097,16 +1371,14 @@
             if (result.original) {
                 document.getElementById('originalName').textContent = 
                     `${result.original.number}번째 괘: ${result.original.name}`;
-                document.getElementById('originalText').textContent = 
-                    result.original.interpretation;
+                displayInterpretationWithSpacing('originalText', result.original.interpretation);
             }
 
             // 지괘
             if (result.changed) {
                 document.getElementById('changedName').textContent = 
                     `${result.changed.number}번째 괘: ${result.changed.name}`;
-                document.getElementById('changedText').textContent = 
-                    result.changed.interpretation;
+                displayInterpretationWithSpacing('changedText', result.changed.interpretation);
             } else {
                 document.getElementById('changedName').textContent = '동효가 없습니다';
                 document.getElementById('changedText').textContent = 
@@ -1137,8 +1409,19 @@
             const lines = interpretation.split('\n');
             
             let html = '';
-            lines.forEach(line => {
+            let currentEffectLines = [];
+            
+            lines.forEach((line, index) => {
                 if (line.trim()) {
+                    // 효 번호로 시작하는지 확인 (1효, 2효, ... 6효, 전체)
+                    const isEffectStart = /^[1-6]효/.test(line.trim()) || line.trim().startsWith('전체');
+                    
+                    if (isEffectStart && currentEffectLines.length > 0) {
+                        // 이전 효의 내용을 마무리하고 div로 감싸기
+                        html += '<div class="effect-line">' + currentEffectLines.join('<br>') + '</div>';
+                        currentEffectLines = [];
+                    }
+                    
                     let shouldHighlight = false;
                     for (let highlightLine of highlightLines) {
                         const effectNum = highlightLine + 1;
@@ -1149,14 +1432,54 @@
                     }
                     
                     if (shouldHighlight) {
-                        html += `<span class="highlight">${line}</span>\n`;
+                        currentEffectLines.push(`<span class="highlight">${line}</span>`);
                     } else {
-                        html += line + '\n';
+                        currentEffectLines.push(line);
                     }
-                } else {
-                    html += '\n';
+                } else if (currentEffectLines.length > 0) {
+                    // 빈 줄은 현재 효 그룹에 추가
+                    currentEffectLines.push('');
                 }
             });
+            
+            // 마지막 효의 내용 추가
+            if (currentEffectLines.length > 0) {
+                html += '<div class="effect-line">' + currentEffectLines.join('<br>') + '</div>';
+            }
+            
+            element.innerHTML = html;
+        }
+
+        // 일반 해석 표시 (본괘, 지괘용)
+        function displayInterpretationWithSpacing(elementId, interpretation) {
+            const element = document.getElementById(elementId);
+            const lines = interpretation.split('\n');
+            
+            let html = '';
+            let currentEffectLines = [];
+            
+            lines.forEach((line, index) => {
+                if (line.trim()) {
+                    // 효 번호로 시작하는지 확인 (1효, 2효, ... 6효, 전체)
+                    const isEffectStart = /^[1-6]효/.test(line.trim()) || line.trim().startsWith('전체');
+                    
+                    if (isEffectStart && currentEffectLines.length > 0) {
+                        // 이전 효의 내용을 마무리하고 div로 감싸기
+                        html += '<div class="effect-line">' + currentEffectLines.join('<br>') + '</div>';
+                        currentEffectLines = [];
+                    }
+                    
+                    currentEffectLines.push(line);
+                } else if (currentEffectLines.length > 0) {
+                    // 빈 줄은 현재 효 그룹에 추가
+                    currentEffectLines.push('');
+                }
+            });
+            
+            // 마지막 효의 내용 추가
+            if (currentEffectLines.length > 0) {
+                html += '<div class="effect-line">' + currentEffectLines.join('<br>') + '</div>';
+            }
             
             element.innerHTML = html;
         }
@@ -1188,32 +1511,66 @@
             document.getElementById('resultButtons').style.display = 'none';
         }
 
-        // 히스토리 접근 모달 표시
-        function showHistoryAccessModal() {
-            document.getElementById('historyAccessModal').style.display = 'flex';
-            document.getElementById('historyAccessPassword').focus();
-        }
-
-        // 히스토리 접근 모달 숨기기
-        function hideHistoryAccessModal() {
-            document.getElementById('historyAccessModal').style.display = 'none';
-            document.getElementById('historyAccessPassword').value = '';
-        }
-
-        // 히스토리 접근
-        function accessHistory() {
-            const password = document.getElementById('historyAccessPassword').value;
+        // 단계별 진행 함수들
+        function updateStepIndicator(activeStep) {
+            // 모든 단계 비활성화
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
             
-            if (password !== '081515') {
-                showMessage('비밀번호가 올바르지 않습니다.', 'error');
-                document.getElementById('historyAccessPassword').value = '';
-                document.getElementById('historyAccessPassword').focus();
-                return;
+            // 현재 단계까지 활성화
+            for (let i = 1; i <= activeStep; i++) {
+                document.getElementById(`step${i}`).classList.add('active');
             }
+        }
 
-            // 비밀번호가 맞으면 히스토리 페이지로 이동
-            hideHistoryAccessModal();
-            window.location.href = '/history';
+        function proceedToEffects() {
+            // 질문 내용 표시
+            const question = questionInput.value.trim();
+            document.getElementById('displayedQuestion').textContent = question || '질문이 입력되지 않았습니다.';
+            
+            // 질문 카드 숨기기
+            document.getElementById('questionCard').classList.add('hidden');
+            // 효 설정 카드 보이기
+            document.getElementById('effectsCard').classList.remove('hidden');
+            // 단계 인디케이터 업데이트
+            updateStepIndicator(2);
+            
+            showMessage('2단계: 효를 설정해주세요.', 'info');
+        }
+
+        // 동전 애니메이션 함수들
+        function showCoinAnimation() {
+            document.getElementById('coinAnimation').style.display = 'flex';
+            
+            // 3초 후 애니메이션 멈추고 계속 버튼 활성화
+            setTimeout(() => {
+                // 모든 동전 애니메이션 정지
+                document.querySelectorAll('.coin').forEach(coin => {
+                    coin.classList.add('stopped');
+                });
+                
+                // 텍스트 변경
+                document.querySelector('.coin-text').textContent = '동전 던지기가 완료되었습니다!';
+                
+                // 계속 버튼 활성화
+                document.getElementById('coinContinueBtn').disabled = false;
+                document.getElementById('coinContinueBtn').textContent = '계속하기';
+            }, 3000);
+        }
+
+        function hideCoinAnimation() {
+            document.getElementById('coinAnimation').style.display = 'none';
+            
+            // 동전 애니메이션과 텍스트 초기화
+            document.querySelectorAll('.coin').forEach(coin => {
+                coin.classList.remove('stopped');
+            });
+            document.querySelector('.coin-text').textContent = '동전을 던져 괘를 뽑고 있습니다...';
+            
+            // 버튼 상태 초기화
+            document.getElementById('coinContinueBtn').disabled = true;
+            document.getElementById('coinContinueBtn').textContent = '잠시 기다려주세요...';
         }
     </script>
 </body>
